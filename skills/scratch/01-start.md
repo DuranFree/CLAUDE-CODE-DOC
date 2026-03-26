@@ -1,4 +1,4 @@
-# Port / Migration — 全局规则
+# From-Scratch — 全局规则
 
 这些规则适用于整个工作流的每一个阶段，始终有效，不可忽略。
 
@@ -16,7 +16,7 @@ If yes, confirm `gh` CLI is installed and logged in before proceeding. If no, sk
 ## 版本控制规则
 
 After every Phase where all tests pass, check if a git repository is connected:
-- **If yes** → automatically commit: `git commit -m "Phase X: ported <system> - all tests passing"`
+- **If yes** → automatically commit: `git commit -m "Phase X: <描述> - all tests passing"`
 - **If no** → notify the user every time: `⚠️ [版本控制] 未检测到 git 仓库，跳过本次 commit。如需版本控制保护，请关联 git 仓库。`
 
 Never skip the check itself.

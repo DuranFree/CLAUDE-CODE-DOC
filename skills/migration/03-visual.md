@@ -24,7 +24,9 @@ Do not skim. Read thoroughly.
 
 ## 2.2 生成视觉清单
 
-After reading all files, generate a complete visual checklist and present to the user:
+After reading all files, generate a complete visual checklist. When scanning, do NOT only look at each file in isolation — trace cross-file visual flows end-to-end. A single visual effect often spans multiple files (e.g. trigger in one file, animation logic in another, completion callback in a third). Any visual effect that crosses 2+ files must be listed as a single complete item, not split apart.
+
+Present to the user:
 
 > "以下是从原版整理的完整视觉清单，请确认没有遗漏。确认后开始生成视觉升级方案。"
 
