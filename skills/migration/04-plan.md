@@ -17,8 +17,10 @@ Read the original code for game/app logic. Understand:
 Each phase ports ONE complete system end-to-end.
 
 **规则：**
-- Each slice produces a working, testable piece of the ported system
-- A completed slice can be verified against original behavior on its own
+- **每个 Phase 必须是一个可玩的最小 demo** — 玩家能实际操作，不能只是后台逻辑
+- 从最小可玩状态开始（哪怕只能打一张牌），每个 Phase 逐步扩展功能
+- 不要先做所有后台再做 UI，每个切片都必须包含足够的 UI 让玩家能操作
+- Each slice produces a working, playable piece of the ported system
 - Prefer many thin slices over few thick ones
 - **Logic**: port faithfully, behavior must match original
 - **Visuals**: implement per Visual Upgrade Guide, do not translate from source

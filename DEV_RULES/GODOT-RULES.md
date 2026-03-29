@@ -74,6 +74,61 @@ enum State { IDLE, MOVING, ATTACKING }
 var state: State = State.IDLE
 ```
 
+**枚举类型转换规则：**
+- 枚举值不能直接当 String 使用，必须先转换
+- 用自定义转换函数或内置方式处理
+
+```gdscript
+# 错误 — 枚举直接传给期望 String 的函数
+some_function(unit.sch_type)  # ← 报错
+
+# 正确 — 先转换
+some_function(_sch_type_to_string(unit.sch_type))
+
+# 或用内置转换
+some_function(SchType.keys()[unit.sch_type])
+```
+
+---
+
+## 类型安全规则
+
+**整数除法：**
+```gdscript
+# 错误 — 结果是 int，小数被截断
+var ratio = damage / max_hp  # ← 结果是 0 或 1
+
+# 正确 — 先转成 float
+var ratio: float = float(damage) / float(max_hp)
+```
+
+**Null 检查：**
+```gdscript
+# 正确 — 用 is_instance_valid 检查节点
+if is_instance_valid(node):
+    node.do_something()
+
+# 正确 — 用 != null 检查普通对象
+if data != null:
+    process(data)
+
+# 错误 — 不检查直接用，容易崩溃
+node.do_something()  # ← 如果 node 已销毁会报错
+```
+
+**Variant 避免：**
+- 不要使用 Variant 类型，会隐藏类型错误
+- 所有变量必须有明确类型声明
+- 如果看到 "variable type inferred as Variant" 警告，必须修复
+
+```gdscript
+# 错误
+var data = get_some_data()  # 类型不明
+
+# 正确
+var data: CardData = get_some_data()
+```
+
 ---
 
 ## 空值检查
@@ -89,6 +144,25 @@ if owner != null:
 if is_instance_valid(owner):
     owner.do_something()
 ```
+
+---
+
+## Autoload 访问规则
+
+GDScript autoload 是挂在场景树 `/root/` 下的节点，不是 C++ 单例，访问方式完全不同：
+
+```gdscript
+# 错误 — C++ 单例的访问方式，对 GDScript autoload 无效
+var gs = Engine.get_singleton("GameState")  # ← 返回 null
+
+# 正确方式 1 — 直接用 autoload 名称（推荐，最简洁）
+var gs = GameState
+
+# 正确方式 2 — 用节点路径
+var gs = get_node("/root/GameState")
+```
+
+**注意**：如果 autoload 名称在 Project Settings 里是 `GameState`，直接写 `GameState` 就能访问，不需要任何 get 调用。
 
 ---
 

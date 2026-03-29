@@ -40,12 +40,16 @@ For visual components: implement per the Visual Upgrade Guide, not from the orig
 
 **Step 3 — 写行为验证测试**
 
-```typescript
-// Example: Original produced score = base * multiplier
-test("score calculation matches original behavior", () => {
-  const result = calculateScore(baseScore, multiplier);
-  expect(result).toBe(originalExpectedOutput);
-});
+Write tests that assert the ported version produces the same observable outcomes as the original. Use whatever test syntax matches the current engine/language:
+
+```
+// Example (pseudocode — adapt to current engine/language)
+// Original produced: score = base * multiplier
+// Port must produce the same result
+
+test "score calculation matches original behavior":
+  result = calculateScore(baseScore, multiplier)
+  assert result == expectedOutput
 ```
 
 **Step 4 — 立即跑测试，修复**
@@ -63,18 +67,35 @@ Only move on after all current system tests pass.
 ## 测试设计规则
 
 1. **测试可观察行为，不测实现**
-```typescript
-// GOOD
-test("unit dies when damage exceeds HP", () => {
-  const unit = createUnit({ hp: 10 });
-  applyDamage(unit, 15);
-  expect(unit.isDead).toBe(true);
-});
 
-// BAD — tests implementation
-test("applyDamage calls unit.reduceHP", () => {
-  expect(mockUnit.reduceHP).toHaveBeenCalled();
-});
+好测试的特征：
+- 测试用户/调用者关心的行为
+- 只使用公开接口
+- 重构后仍然有效
+- 描述 WHAT，不描述 HOW
+
+```
+// GOOD — 测试可观察行为（用当前引擎/语言的语法）
+test "unit dies when damage exceeds HP":
+  unit = createUnit(hp: 10)
+  applyDamage(unit, 15)
+  assert unit.isDead == true
+
+// BAD — 测试实现细节
+test "applyDamage calls unit.reduceHP":
+  assert mockUnit.reduceHP was called  // ← 不测行为，测实现
+
+// BAD — 绕过接口验证
+test "createUnit saves to database":
+  createUnit(data)
+  row = db.query("SELECT * FROM units")
+  assert row exists  // ← 绕过接口
+
+// GOOD — 通过接口验证
+test "createUnit makes unit retrievable":
+  unit = createUnit(data)
+  retrieved = getUnit(unit.id)
+  assert retrieved.name == data.name
 ```
 
 2. **用原版作为参照，不要靠假设**
@@ -121,6 +142,12 @@ If the original code has a bug:
   2. 跳过，使用替代方案（自己写 TestRunner）
   3. 取消
 - If installation fails and user is away → automatically use lightweight TestRunner, log in dev-log.md
+
+**⚠️ 如果当前在使用 TestRunner 替代方案：**
+- 每个 Phase 开始前**主动尝试安装标准测试框架**
+- 安装成功 → 立即将所有现有测试迁移到标准框架，通知用户
+- 安装失败 → 继续用 TestRunner，下个 Phase 再试
+- 不要等用户提醒，主动找机会切换回标准框架
 
 Always announce status:
 - `⚙️ [测试框架] 未找到标准测试框架，正在安装 <框架名称>...`

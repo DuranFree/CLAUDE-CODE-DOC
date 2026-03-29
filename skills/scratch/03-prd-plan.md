@@ -50,19 +50,22 @@ If a codebase already exists, explore it to understand current architecture, exi
 ### 3.2 识别耐久架构决策
 
 Before slicing, identify high-level decisions unlikely to change:
-- Route structures / URL patterns
-- Database schema shape
-- Key data models
-- Authentication / authorization approach
-- Third-party service boundaries
+- Core system boundaries (which systems exist and how they communicate)
+- Key data models and their relationships
+- Platform-specific constraints (target device, performance limits)
+- Third-party service or plugin boundaries
+- Save/load data format and storage approach
 
 ### 3.3 垂直切片
 
 Each phase is a thin vertical slice cutting through ALL integration layers end-to-end.
 
 **规则：**
+- **每个 Phase 必须是一个可玩的最小 demo** — 玩家能实际操作，不能只是后台逻辑
+- 从最小可玩状态开始（哪怕只能打一张牌），每个 Phase 逐步扩展功能
+- 不要先做所有后台再做 UI，每个切片都必须包含足够的 UI 让玩家能操作
 - Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)
-- A completed slice is demoable or verifiable on its own
+- A completed slice must be playable, not just testable
 - Prefer many thin slices over few thick ones
 - Do NOT include specific file names or function names likely to change
 - DO include durable decisions: route paths, schema shapes, data model names

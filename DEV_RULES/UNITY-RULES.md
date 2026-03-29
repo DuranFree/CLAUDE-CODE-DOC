@@ -139,3 +139,47 @@ PlayMode 测试放在 `Assets/Tests/PlayMode/` 目录。
 - 不要在运行时用 `GameObject.Find()`，提前缓存引用
 - `string` 拼接在热路径里用 `StringBuilder`
 - Physics 操作放在 `FixedUpdate()`，输入检测放在 `Update()`
+
+---
+
+## 类型安全规则
+
+**枚举转换：**
+```csharp
+// 错误 — 枚举直接当 string 用
+string name = cardType;  // ← 报错
+
+// 正确 — 用 ToString() 或 Enum.GetName()
+string name = cardType.ToString();
+string name2 = Enum.GetName(typeof(CardType), cardType);
+```
+
+**整数除法：**
+```csharp
+// 错误 — 结果是 int，小数被截断
+int ratio = damage / maxHp;  // ← 结果是 0 或 1
+
+// 正确 — 先转成 float
+float ratio = (float)damage / (float)maxHp;
+```
+
+**值类型 vs 引用类型：**
+```csharp
+// struct 是值类型，赋值是复制
+Vector3 pos = transform.position;
+pos.x = 5f;  // ← 不会影响 transform.position，必须重新赋值
+transform.position = pos;  // ← 正确
+
+// 错误写法
+transform.position.x = 5f;  // ← 编译报错
+```
+
+**Null 合并：**
+```csharp
+// 对普通 C# 对象可以用 ?? 运算符
+var target = possibleTarget ?? defaultTarget;
+
+// 对 Unity Object 不要用 ??，因为 == null 被重载过
+// 改用三元运算符
+var target = possibleTarget != null ? possibleTarget : defaultTarget;
+```

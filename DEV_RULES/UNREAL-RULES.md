@@ -136,3 +136,74 @@ UnrealEditor-Cmd.exe <ProjectPath> -ExecCmds="Automation RunTests <TestName>" -n
 - 编译时间很长，改动要小步提交
 - Hot Reload 不稳定，重大改动后完整重编译
 - 物理操作在 `PhysicsTick` 或用 `FBodyInstance` 直接操作
+
+---
+
+## 类型安全规则
+
+**枚举转换：**
+```cpp
+// 错误 — 枚举直接当 FString 用
+FString name = CardType;  // ← 报错
+
+// 正确 — 用 UEnum::GetValueAsString()
+FString name = UEnum::GetValueAsString(CardType);
+
+// 或用 StaticEnum
+FString name = StaticEnum<ECardType>()->GetNameStringByValue((int64)CardType);
+```
+
+**FString vs FName vs FText：**
+```cpp
+// FString — 可修改的字符串，用于逻辑处理
+FString CardName = TEXT("Fireball");
+
+// FName — 不可修改的标识符，用于资产引用、查找
+FName SocketName = TEXT("hand_r");
+
+// FText — 本地化字符串，用于 UI 显示
+FText DisplayName = LOCTEXT("CardName", "Fireball");
+
+// 错误 — 混用类型
+FName name = CardName;  // ← 需要显式转换 FName(*CardName)
+```
+
+**整数除法：**
+```cpp
+// 错误 — 结果是 int，小数被截断
+int32 ratio = Damage / MaxHp;  // ← 结果是 0 或 1
+
+// 正确 — 先转成 float
+float ratio = (float)Damage / (float)MaxHp;
+```
+
+**IsValid 检查：**
+```cpp
+// 错误 — 不检查直接用，容易崩溃
+Actor->DoSomething();
+
+// 正确 — 先检查
+if (IsValid(Actor))
+{
+    Actor->DoSomething();
+}
+
+// TWeakObjectPtr 需要用 IsValid() 而不是 != nullptr
+if (WeakRef.IsValid())
+{
+    WeakRef->DoSomething();
+}
+```
+
+**TArray 操作：**
+```cpp
+// 错误 — 越界访问
+TArray<int32> arr = {1, 2, 3};
+int32 val = arr[5];  // ← 崩溃
+
+// 正确 — 先检查长度
+if (arr.IsValidIndex(5))
+{
+    int32 val = arr[5];
+}
+```

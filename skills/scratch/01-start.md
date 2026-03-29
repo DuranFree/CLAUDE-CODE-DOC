@@ -38,4 +38,51 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
 
 ---
 
-读取完毕后，立即读取 `02-requirements.md` 开始 Phase 1。
+## 持久化文件规则
+
+以下文件必须在项目文件夹里维护，贯穿整个开发周期。每个文件的更新方式不同，严格遵守：
+
+### 文件结构
+```
+<project>/
+  plans/
+    feature-checklist.md   ← 功能清单，完成打勾，持续更新
+    visual-checklist.md    ← 视觉清单，完成打勾，持续更新
+    tech-debt.md           ← 技术债，解决后删除，新增时追加
+    known-bugs.md          ← 已知 Bug，修复后标记 ✅，新增时追加
+    deep-scan-results.md   ← Phase 1 生成，之后不再修改
+  logs/
+    dev-log.md             ← 每个 Phase 追加，不覆盖
+ ```
+
+### 各文件更新规则
+
+**feature-checklist.md**
+- Phase 1 生成完整功能清单后创建
+- 每完成一个功能项立即更新，标记 ✅
+- 不删除任何项目，只更新状态
+
+**visual-checklist.md**
+- Phase 2 生成视觉清单后创建
+- 每完成一个视觉项立即更新，标记 ✅
+- 不删除任何项目，只更新状态
+
+**tech-debt.md**
+- 发现技术债时追加
+- 解决后删除对应条目
+- 格式：`- [ ] <描述> — 原因：<why deferred> — Phase <number>`
+
+**known-bugs.md**
+- 发现 bug 时追加
+- 修复后标记 ✅，不删除
+- 格式：`- [ ] <描述> — 发现于 Phase <number>`
+
+**deep-scan-results.md**
+- Phase 1 深度扫描完成后创建
+- 包含：硬编码数值、配置文件、交互流程链
+- **之后不再修改**
+
+---
+
+
+

@@ -2,11 +2,18 @@
 
 ## Grill Me
 
-Interview the user relentlessly about every aspect of the plan until reaching shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
+**Do not ask the questions from the KICKOFF file — those are already answered. Instead:**
 
-If a question can be answered by exploring the codebase, explore the codebase instead.
+1. Read all provided files and the codebase thoroughly
+2. Then interview the user **relentlessly** — walk down every branch of the decision tree, one question at a time, resolving dependencies between decisions one-by-one
+3. For each question, provide your own recommended answer so the user can agree or redirect
+4. **If a question can be answered by exploring the codebase, explore the codebase instead of asking**
+5. Do NOT move to the next question until the current one is fully resolved
+6. Do NOT stop until every decision, edge case, and ambiguity is resolved — even if it takes many questions
 
-**Do not proceed until all major decision branches are resolved.**
+The goal is to surface what the user hasn't thought of yet. Be thorough, not quick.
+
+**Do not proceed to the feature checklist until all decision branches are fully resolved.**
 
 ---
 

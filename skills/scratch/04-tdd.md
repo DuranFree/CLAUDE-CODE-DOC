@@ -29,12 +29,18 @@ RIGHT (vertical):
 
 ## 工作流
 
-**Step 1 — 规划（写代码前）**
-- Confirm with user what interface changes are needed
-- Confirm which behaviors to test (prioritize)
-- Identify opportunities for deep modules (small interface, deep implementation)
-- Design interfaces for testability
-- Get user approval on the plan
+**Step 1 — 规划（写任何代码之前）**
+
+- [ ] 确认需要什么接口改动
+- [ ] 确认哪些行为要测试（优先级排序）
+- [ ] 识别深模块机会（小接口，大实现）
+- [ ] 为可测试性设计接口
+- [ ] 列出要测试的行为（不是实现步骤）
+- [ ] 获取用户批准
+
+问用户："公开接口应该长什么样？哪些行为最重要？"
+
+**你不可能测试所有东西。** 和用户确认哪些行为最关键，把测试精力放在核心路径和复杂逻辑上，不是每个边界情况。
 
 **Step 2 — Tracer Bullet**
 ```
@@ -70,24 +76,28 @@ After all tests pass:
 ## 接口设计规则
 
 1. **Accept dependencies, don't create them**
-```typescript
-// Testable
-function processOrder(order, paymentGateway) {}
 
-// Hard to test
-function processOrder(order) {
-  const gateway = new StripeGateway(); // ← bad
+Pass external dependencies in rather than creating them internally:
+
+```
+// Testable — dependency injected
+function resolveCombat(attacker, defender, rules) {}
+
+// Hard to test — dependency created internally
+function resolveCombat(attacker, defender) {
+  const rules = new GameRules(); // ← bad, can't be replaced in tests
 }
 ```
 
 2. **Return results, don't produce side effects**
-```typescript
-// Testable
-function calculateDiscount(cart): Discount {}
 
-// Hard to test
-function applyDiscount(cart): void {
-  cart.total -= discount; // ← bad
+```
+// Testable — returns result
+function calculateDamage(attack, defense): int {}
+
+// Hard to test — modifies state directly
+function applyDamage(unit, amount): void {
+  unit.hp -= amount; // ← hard to verify without checking internal state
 }
 ```
 
@@ -107,6 +117,41 @@ Mock at **system boundaries only**:
 - Internal collaborators
 - Anything you control
 
+**设计易于 Mock 的接口：**
+
+用依赖注入，不要在内部创建依赖：
+
+```
+// Easy to mock — 依赖从外部传入
+function resolveCombat(attacker, defender, rules) {}
+
+// Hard to mock — 依赖在内部创建
+function resolveCombat(attacker, defender) {
+  const rules = new GameRules();  // ← 无法在测试中替换
+}
+```
+
+**优先用 SDK 风格接口，不要用通用 fetcher：**
+
+```
+// GOOD — 每个函数独立可 mock
+const gameAPI = {
+  getUnit: (id) => ...,
+  dealDamage: (unitId, amount) => ...,
+  endTurn: () => ...,
+};
+
+// BAD — mock 时需要条件逻辑
+const gameAPI = {
+  call: (action, params) => ...  // ← 难以 mock
+};
+```
+
+SDK 风格的好处：
+- 每个 mock 只返回一种固定结构
+- 测试里不需要条件逻辑
+- 一眼看出测试用了哪些操作
+
 ---
 
 ## 深模块原则
@@ -120,21 +165,44 @@ Ask: Can I reduce methods? Simplify params? Hide more complexity inside?
 
 ## 好测试 vs 坏测试
 
-```typescript
-// GOOD
-test("user can checkout with valid cart", async () => {
-  const cart = createCart();
-  cart.add(product);
-  const result = await checkout(cart, paymentMethod);
-  expect(result.status).toBe("confirmed");
-});
+好测试是**集成风格**的——通过真实接口测试，而不是 mock 内部实现。
 
-// BAD — tests implementation
-test("checkout calls paymentService.process", async () => {
-  const mockPayment = jest.mock(paymentService);
-  await checkout(cart, payment);
-  expect(mockPayment.process).toHaveBeenCalledWith(cart.total);
-});
+好测试的特征：
+- 测试用户/调用者关心的行为
+- 只使用公开 API
+- 重构后仍然有效
+- 描述 WHAT，不描述 HOW
+- 每个测试只有一个逻辑断言
+
+坏测试的红旗：
+- Mock 内部协作者
+- 测试私有方法
+- 断言调用次数/顺序
+- 重构但行为没变时测试却失败
+- 测试名称描述 HOW 不是 WHAT
+
+```
+// GOOD — 测试可观察行为（用当前引擎/语言的语法）
+test "player can complete turn with valid action":
+  state = createGameState()
+  result = processTurn(state, validAction)
+  assert result.status == "completed"
+
+// BAD — 测试实现细节
+test "processTurn calls actionService.execute":
+  assert mockActionService.execute was called  // ← 不测行为，测实现
+
+// BAD — 绕过接口验证
+test "createUnit saves to database":
+  createUnit(data)
+  row = db.query("SELECT * FROM units")
+  assert row exists  // ← 绕过接口直接查数据库
+
+// GOOD — 通过接口验证
+test "createUnit makes unit retrievable":
+  unit = createUnit(data)
+  retrieved = getUnit(unit.id)
+  assert retrieved.name == data.name  // ← 通过公开接口验证
 ```
 
 ---
@@ -162,6 +230,8 @@ test("checkout calls paymentService.process", async () => {
   2. 跳过，使用替代方案（自己写 TestRunner）
   3. 取消
 - If installation fails and user is away → automatically use lightweight TestRunner, log in dev-log.md
+
+**⚠️ 如果当前在使用 TestRunner 替代方案：** 在每个 Phase 开始前检查标准测试框架是否已可用。一旦可用，立即将所有现有测试迁移到标准框架，不要继续使用 TestRunner。
 
 Always announce status:
 - `⚙️ [测试框架] 未找到标准测试框架，正在安装 <框架名称>...`

@@ -2,7 +2,18 @@
 
 ## Grill Me
 
-Interview the user relentlessly about every aspect of the migration until reaching shared understanding. Walk down each branch of the decision tree, resolving dependencies one-by-one. For each question, provide your recommended answer.
+**Do not ask the questions from the KICKOFF file — those are already answered. Instead:**
+
+1. Read all provided files and the original codebase thoroughly
+2. Then interview the user **relentlessly** — walk down every branch of the decision tree, one question at a time, resolving dependencies between decisions one-by-one
+3. For each question, provide your own recommended answer so the user can agree or redirect
+4. **If a question can be answered by exploring the codebase, explore the codebase instead of asking**
+5. Do NOT move to the next question until the current one is fully resolved
+6. Do NOT stop until every decision, edge case, and ambiguity is resolved — even if it takes many questions
+
+The goal is to surface what the user hasn't thought of yet. Be thorough, not quick.
+
+**Do not proceed to the deep scans or feature checklist until all decision branches are fully resolved.**
 
 Key questions to resolve:
 - Where is the original codebase? (get the exact path)
@@ -27,6 +38,16 @@ Scan all code for hardcoded numerical values and boundary conditions hidden insi
 
 **深度扫描 2 — 配置和数据文件：**
 Scan for any configuration or data files outside the main codebase (JSON, CSV, XML, INI, YAML, or platform-specific formats) that contain game data such as unit stats, level configs, card definitions, or balance values. These must all be ported or recreated in the target platform.
+
+**深度扫描 3 — 用户交互流程链：**
+Do NOT only scan by feature module. Also trace complete user interaction flows end-to-end — from the user's first action to the final result, crossing file boundaries. A single user-facing feature often spans multiple files and will be missed if each file is only read in isolation.
+
+For each interaction flow found, document the complete chain, for example:
+```
+悬停手牌 → 识别费用缺口 → 高亮符文 → 拖牌 → 自动补足 → 出牌
+```
+
+Any flow that crosses 2+ files must be explicitly listed in the feature checklist as a single item, not split across multiple items.
 
 ---
 

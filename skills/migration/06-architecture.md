@@ -31,7 +31,16 @@ Show a numbered list. For each:
 
 Ask the user which to explore. Do NOT propose interfaces yet.
 
-**Step 3 — 并行设计多个接口方案**
+**Step 3 — 描述问题空间（在派出子 Agent 之前）**
+
+为用户写一个问题空间的说明：
+- 任何新接口需要满足的约束
+- 它需要依赖什么
+- 一个粗略的示意代码片段，让约束更具体——这不是方案，只是让约束更清晰
+
+把这个展示给用户，然后**立即**进行 Step 4。用户读说明的同时子 Agent 在并行工作。
+
+**Step 4 — 并行设计多个接口方案**
 
 Spawn 3+ parallel sub-agents with different constraints:
 - Agent 1: "Minimize interface — aim for 1-3 entry points max"
