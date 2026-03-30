@@ -29,6 +29,13 @@ RIGHT (vertical):
 
 ## 工作流
 
+**Step 0 — 场景完整性审计 + 玩家操作清单对比（每个 Phase 必做）**
+
+每个 Phase 开始前，无论是逻辑、UI 还是视觉 Phase，都必须执行：
+1. 读取 feature-checklist.md 中的布局/区域相关条目，列出所有未完成项
+2. 如果本 Phase 的工作对象依赖这些未完成的区域/组件，必须先完成前置项或告知用户缺失
+3. 如果本 Phase 涉及 UI 或交互，额外执行 `01-start.md` 中的"玩家操作清单对比规则"
+
 **Step 1 — 规划（写任何代码之前）**
 
 - [ ] 确认需要什么接口改动
@@ -173,6 +180,7 @@ Ask: Can I reduce methods? Simplify params? Hide more complexity inside?
 - 重构后仍然有效
 - 描述 WHAT，不描述 HOW
 - 每个测试只有一个逻辑断言
+- **必须包含边界条件测试：无合法目标、空列表、零值、极限值等异常路径，不只测正常流程**
 
 坏测试的红旗：
 - Mock 内部协作者
