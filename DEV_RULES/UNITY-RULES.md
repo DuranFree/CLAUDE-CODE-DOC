@@ -122,6 +122,12 @@ Unity -batchmode -runTests -testPlatform EditMode -nographics -projectPath <path
 EditMode 测试放在 `Assets/Tests/EditMode/` 目录。
 PlayMode 测试放在 `Assets/Tests/PlayMode/` 目录。
 
+**⚠️ `-quit` 和 `-runTests` 不能同时使用：**
+- `-quit` 会让 Unity 在测试跑完之前退出，导致测试结果丢失
+- 使用 `-runTests` 时不加 `-quit`，测试完成后 Unity 会自动退出
+- 正确写法：`-batchmode -runTests -testPlatform EditMode -nographics -projectPath <path>`
+- 错误写法：`-batchmode -runTests -quit -nographics -projectPath <path>`
+
 ---
 
 ## 纯逻辑抽离
@@ -183,3 +189,33 @@ var target = possibleTarget ?? defaultTarget;
 // 改用三元运算符
 var target = possibleTarget != null ? possibleTarget : defaultTarget;
 ```
+
+---
+
+## Git 管理规则
+
+**必须排除的文件夹：**
+- `Library/` — Unity 自动生成的完整缓存目录，绝对不上传
+- `Library/PackageCache/` — 包缓存，自动生成，体积巨大
+- `Temp/` — 临时编译文件
+- `Logs/` — 运行日志
+- `obj/` — 编译中间文件
+
+**标准 .gitignore 内容（必须包含）：**
+```
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+```
+
+**如已误上传，执行以下命令从仓库删除（不删本地文件）：**
+```
+git rm -r --cached Library/
+git rm -r --cached Temp/
+git rm -r --cached Obj/
+git commit -m "chore: remove auto-generated folders from tracking"
+git push
+```
+
+**确认 .gitignore 已包含以上路径后再 push，否则下次还会上传。**

@@ -80,6 +80,41 @@ Ask: Does the granularity feel right? Should any phases be merged or split?
 
 Iterate until the user approves.
 
+### 3.4.1 功能 × Phase 对照表
+
+规划完成后，必须生成完整的功能对照表，确保没有功能黑洞：
+
+```
+| 功能 | Phase | 状态 | 备注 |
+|------|-------|------|------|
+| 功能A | Phase 1 | 待做 | |
+| 功能B | Phase 2 | 待做 | |
+| 功能C | OUT OF SCOPE | - | 原因 |
+```
+
+**规则：**
+- 功能清单里的每一条必须分配到具体 Phase 或标注为 OUT OF SCOPE
+- 不允许"后续再做"的模糊表述
+- 每个 Phase 必须明确声明覆盖哪些功能，剩余哪些留后续
+- 生成对照表后询问用户：是否有遗漏的功能？
+
+### 3.4.2 Pre-mortem（事前风险分析）
+
+每个 Phase 规划完成后，在开始写代码之前，必须执行以下分析：
+
+> "假设这个 Phase 失败了，最可能是哪一步出的问题？有没有更简单的替代方案？"
+
+输出格式：
+```
+Phase X Pre-mortem：
+- 最高风险点：[具体描述]
+- 次要风险点：[具体描述]
+- 建议替代方案：[如果有的话]
+- 结论：按原计划 / 建议调整为 [方案]
+```
+
+用户确认后才开始写代码。
+
 ### 3.5 写计划文件
 
 Create `./plans/<feature-name>.md`:

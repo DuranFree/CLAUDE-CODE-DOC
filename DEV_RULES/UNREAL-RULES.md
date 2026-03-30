@@ -207,3 +207,37 @@ if (arr.IsValidIndex(5))
     int32 val = arr[5];
 }
 ```
+
+---
+
+## Git 管理规则
+
+**必须排除的文件夹：**
+- `Binaries/` — 编译输出，每次构建自动生成
+- `Intermediate/` — 编译中间文件，体积巨大
+- `DerivedDataCache/` — 类似 Unity 的 Library，自动生成的资产缓存
+- `Saved/` — 日志、截图、崩溃报告
+- `Build/` — 打包输出
+
+**标准 .gitignore 内容（必须包含）：**
+```
+Binaries/
+Intermediate/
+DerivedDataCache/
+Saved/
+Build/
+*.VC.db
+*.VC.opendb
+```
+
+**如已误上传，执行以下命令从仓库删除（不删本地文件）：**
+```
+git rm -r --cached Binaries/
+git rm -r --cached Intermediate/
+git rm -r --cached DerivedDataCache/
+git rm -r --cached Saved/
+git commit -m "chore: remove auto-generated folders from tracking"
+git push
+```
+
+**确认 .gitignore 已包含以上路径后再 push，否则下次还会上传。**

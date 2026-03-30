@@ -49,6 +49,11 @@ For each interaction flow found, document the complete chain, for example:
 
 Any flow that crosses 2+ files must be explicitly listed in the feature checklist as a single item, not split across multiple items.
 
+**⚠️ 数据字段验证规则：**
+数据字段存在 ≠ 游戏机制存在。发现任何数据字段时，必须追踪该字段在代码中实际被使用的地方，确认其真实用途，不得仅凭字段名或字段值推断游戏机制。
+
+例如：发现 `hp: 14` 字段，不能直接推断"该单位有独立HP系统"，必须搜索所有使用该字段的代码，确认它是战斗血量还是内部计算用的数值。
+
 ---
 
 ## 功能清单

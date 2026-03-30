@@ -10,6 +10,12 @@ This is NOT traditional TDD. The original codebase IS the specification for **lo
 
 **The test standard is: original input A produces output B → ported version must also produce output B.**
 
+**⚠️ 代码是唯一可信来源：**
+- 文档（包括 feature-checklist.md、phase-roadmap.md）可能过时或有错
+- 每次规划和实现新 Phase 前，必须先读原版代码对应部分，再对比文档
+- 发现文档和代码不一致时，以代码为准，立即修正文档
+- 不得用文档验证文档，只能用代码验证文档
+
 ---
 
 ## 与 TDD 的区别

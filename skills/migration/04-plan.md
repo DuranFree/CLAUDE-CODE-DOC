@@ -10,9 +10,15 @@ Read the original code for game/app logic. Understand:
 
 **Note**: Visual systems will be rebuilt per the Visual Upgrade Guide from Phase 2, not ported from source. Logic systems are ported faithfully.
 
----
+## 3.1 规划前必须先读原版代码
 
-## 3.2 垂直切片
+**⚠️ 代码是唯一可信来源：**
+- 文档（包括 feature-checklist.md、phase-roadmap.md）可能过时或有错
+- 规划每个新 Phase 之前，必须先读原版代码对应部分，再对比文档
+- 发现文档和代码不一致时，以代码为准，立即修正文档
+- 不得用文档验证文档，只能用代码验证文档
+
+---
 
 Each phase ports ONE complete system end-to-end.
 
@@ -38,6 +44,41 @@ Present as a numbered list. For each phase show:
 Ask: Does the granularity feel right? Are the dependencies in the right order?
 
 Iterate until the user approves.
+
+## 3.3.1 功能 × Phase 对照表
+
+规划完成后，必须生成完整的功能对照表，确保没有功能黑洞：
+
+```
+| 功能 | Phase | 状态 | 备注 |
+|------|-------|------|------|
+| 功能A | Phase 1 | 待做 | |
+| 功能B | Phase 2 | 待做 | |
+| 功能C | OUT OF SCOPE | - | 原因 |
+```
+
+**规则：**
+- 功能清单里的每一条必须分配到具体 Phase 或标注为 OUT OF SCOPE
+- 不允许"后续再做"的模糊表述
+- 每个 Phase 必须明确声明覆盖哪些功能，剩余哪些留后续
+- 生成对照表后询问用户：是否有遗漏的功能？
+
+## 3.3.2 Pre-mortem（事前风险分析）
+
+每个 Phase 规划完成后，在开始写代码之前，必须执行以下分析：
+
+> "假设这个 Phase 失败了，最可能是哪一步出的问题？有没有更简单的替代方案？"
+
+输出格式：
+```
+Phase X Pre-mortem：
+- 最高风险点：[具体描述]
+- 次要风险点：[具体描述]
+- 建议替代方案：[如果有的话]
+- 结论：按原计划 / 建议调整为 [方案]
+```
+
+用户确认后才开始写代码。
 
 ---
 

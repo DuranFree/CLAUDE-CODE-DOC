@@ -201,3 +201,28 @@ godot --headless -s res://addons/gut/gut_cmdln.gd
 - `Variant` 类型的警告默认是 warning，但很多项目设置为 error，一律避免使用
 - `int / int` 在 GDScript 里结果还是 `int`，需要浮点除法用 `float(a) / float(b)`
 - 信号连接推荐用代码连接而不是编辑器连接，方便追踪
+
+---
+
+## Git 管理规则
+
+**必须排除的文件夹/文件：**
+- `.godot/` — Godot 4 自动生成的项目缓存，绝对不上传
+- `export_presets.cfg` — 如含签名密钥或证书信息，不得上传
+- `.import/` — Godot 3 的导入缓存（如兼容旧项目）
+
+**标准 .gitignore 内容（必须包含）：**
+```
+.godot/
+export_presets.cfg
+```
+
+**如已误上传，执行以下命令从仓库删除（不删本地文件）：**
+```
+git rm -r --cached .godot/
+git rm --cached export_presets.cfg
+git commit -m "chore: remove auto-generated folders from tracking"
+git push
+```
+
+**确认 .gitignore 已包含以上路径后再 push，否则下次还会上传。**
