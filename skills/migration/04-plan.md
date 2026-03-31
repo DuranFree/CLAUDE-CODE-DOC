@@ -18,6 +18,12 @@ Read the original code for game/app logic. Understand:
 - 发现文档和代码不一致时，以代码为准，立即修正文档
 - 不得用文档验证文档，只能用代码验证文档
 
+**⚠️ 界面定义文件是布局的唯一可信来源：**
+- 原项目中描述界面布局、样式、尺寸、颜色的文件，就是设计稿
+- 每个 UI Phase 开始前，必须先完整读取这些文件，建立「原始属性 → 目标引擎属性」的映射表
+- 数值直抄，禁止凭感觉
+- 逐区域对照，每改完一个区域立即与原项目定义对比
+
 ---
 
 Each phase ports ONE complete system end-to-end.
