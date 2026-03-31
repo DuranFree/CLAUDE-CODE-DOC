@@ -4,14 +4,14 @@
 
 **每次新会话开始时，立即执行：**
 读取以下文件了解当前项目状态，然后告知用户当前进度：
-- `./plans/feature-checklist.md`
-- `./plans/visual-checklist.md`（如有，PRD 包含视觉需求时才存在）
-- `./logs/dev-log.md`
+- `./logs/dev-log.md`（只读最后 2 个 Phase 的记录）
 - `./plans/known-bugs.md`
 - `./plans/tech-debt.md`
-
-每次必读：
 - 项目计划 roadmap 文件
+
+**开始新 Phase 前必须读取：**
+- `./plans/feature-checklist.md`
+- `./plans/visual-checklist.md`（如有，PRD 包含视觉需求时才存在）
 
 检查 git status，如果项目专属索引文件（如资源索引等）出现在修改列表中，立即读取它。
 
