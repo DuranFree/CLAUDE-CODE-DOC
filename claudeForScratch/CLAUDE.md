@@ -1,21 +1,11 @@
-# CLAUDE.md — ⚠️ 已废弃
-
-> 此文件已拆分为两个专用版本：
-> - Migration 项目 → `./claudeForMigration/CLAUDE.md`
-> - From-Scratch 项目 → `./claudeForScratch/CLAUDE.md`
->
-> 请使用对应版本，不再维护此文件。
-
----
-
-# CLAUDE.md — 项目全局规则（旧版存档）
+# CLAUDE.md — 从零开发项目全局规则（From-Scratch）
 
 这些规则在每个会话自动生效，不可忽略。
 
 **每次新会话开始时，立即执行：**
 读取以下文件了解当前项目状态，然后告知用户当前进度：
 - `./plans/feature-checklist.md`
-- `./plans/visual-checklist.md`
+- `./plans/visual-checklist.md`（如有，PRD 包含视觉需求时才存在）
 - `./logs/dev-log.md`
 - `./plans/known-bugs.md`
 - `./plans/tech-debt.md`
@@ -29,8 +19,8 @@
 1. **更新功能清单** — 标记已完成的功能项：
    `./plans/feature-checklist.md`
 
-2. **更新视觉清单** — 标记已完成的视觉项：
-   `./plans/visual-checklist.md`
+2. **更新视觉清单** — 标记已完成的视觉项（如有）：
+   `./plans/visual-checklist.md`（PRD 不含视觉需求时此步骤跳过）
 
 3. **更新开发日志** — 追加本 Phase 的记录：
    `./logs/dev-log.md`
@@ -41,8 +31,8 @@
 5. **检查已知 Bug** — 有新发现就追加，已修复就标记 ✅：
    `./plans/known-bugs.md`
 
-6. **读取功能清单和视觉清单** — 确认下一步从哪里开始：
-   读取 `./plans/feature-checklist.md` 和 `./plans/visual-checklist.md`
+6. **读取功能清单** — 确认下一步从哪里开始：
+   读取 `./plans/feature-checklist.md`（以及 `visual-checklist.md` 如有）
    不得依赖记忆，必须读取文件后才能继续。
 
 7. **版本控制检查** — 测试全绿后检查 git 状态：
@@ -72,7 +62,7 @@
 - 测试不可跳过，任何情况下都不能省略
 - 每个 Phase 必须测试全绿才能继续下一个
 - 逻辑测试每个循环后立即跑：`🟢 [逻辑测试]`
-- 引擎测试每个 Phase 完成后跑：`🔵 [引擎测试]`
+- 引擎测试每个 Phase 完成后跑：`🔵 [引擎测试]`（适用于使用游戏引擎的项目；纯 Web/Node 项目用对应测试框架替代）
 - 如果测试框架未安装，自动安装，安装失败才用 TestRunner 替代
 - **引擎编辑器开着时，优先用引擎 MCP 的 run_tests 工具跑测试，禁止用 batchmode / headless 杀进程再测试**
 - MCP run_tests 出错 / 超时 / 无响应时，立刻杀掉引擎进程，切换 batchmode / headless 后台跑测试，不得卡住等待，不需要用户确认
@@ -82,13 +72,11 @@
 
 ## 交互测试规则
 
-每个 Phase 完成后，针对本 Phase 新增的所有可交互元素，必须写 Play Mode 测试验证交互响应：
+每个 Phase 完成后，针对本 Phase 新增的所有可交互元素，必须写测试验证交互响应：
 - 用代码模拟点击、触发等操作
 - 验证对应的回调、事件、状态变化是否正确触发
 - 测试必须全绿才能停下来等用户确认
 - 测试写法必须通用，不依赖具体引擎 API，只验证行为结果
-
-例如：点击某个按钮后，验证对应的事件是否被触发、状态是否正确改变，而不是验证按钮本身的存在。
 
 ---
 
@@ -173,9 +161,9 @@
 
 ---
 
-## Roadmap 修改校验规则
+## Roadmap 修改校验规则（From-Scratch）
 
-任何时候新增、修改、追加项目计划 roadmap 文件的内容（包括追加新 Phase、调整顺序、修改 Phase 内容），必须先完整读取当前工作流的计划规划文件（migration 工作流：`04-plan.md`；scratch 工作流：`03-prd-plan.md`），逐条对照检查：
+任何时候新增、修改、追加项目计划 roadmap 文件的内容（包括追加新 Phase、调整顺序、修改 Phase 内容），必须先完整读取 `03-prd-plan.md`，逐条对照检查：
 
 - 所有规划规则是否还在被遵守？
 - Phase 顺序和依赖门是否正确？
@@ -192,5 +180,3 @@
 1. 先运行 `git status` 检查是否有未提交修改
 2. 如果有未提交修改，必须先 `git stash` 保存，或明确告知用户并等待确认，不得直接执行
 3. 操作完成后提示用户是否需要 `git stash pop` 恢复
-
-
