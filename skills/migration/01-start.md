@@ -4,6 +4,64 @@
 
 ---
 
+## 引擎 MCP 检查
+
+项目启动时，读取 KICKOFF 文档中的目标平台字段，执行一次性 MCP 检查流程：
+
+| 平台 | 推荐 MCP | 安装方式 |
+|---|---|---|
+| Unity | CoderGamester/mcp-unity | UPM git URL + node build |
+| Unreal Engine | chongdashu/unreal-mcp | UE 插件 + Python server |
+| Godot | Coding-Solo/godot-mcp | npm install + node |
+| Phaser.js / Web | phaserjs/editor-mcp-server | `npx @phaserjs/editor-mcp-server` |
+
+**完整检查流程（只在项目启动时执行一次）：**
+
+**第一步 — 安装检查：**
+1. 查看项目根目录是否存在 `.mcp.json` 且包含对应平台的 MCP 配置
+2. 未配置 → 告知用户：`⚠️ 检测到目标平台为 [X]，推荐安装 [MCP名] 以支持引擎内部状态查询，是否现在安装？`
+   - 用户确认 → 执行安装流程 → 进入第二步
+   - 用户跳过 → 记录到 `tech-debt.md`，后续查询场景时改用读取文件，跳过后续步骤
+
+**第二步 — 版本检查：**
+3. 已配置 / 刚安装完 → 检查是否有新版本（查对应 GitHub repo 最新 release / npm latest tag）
+   - 有更新 → 提示用户：`🔄 [MCP更新] [MCP名] 有新版本，建议更新后再继续，是否现在更新？`
+     - 用户确认 → 执行更新 → 进入第三步
+     - 用户跳过 → 直接进入第三步（版本滞后属于低优先级，不记录）
+   - 无更新 → 直接进入第三步
+
+**第三步 — 可用性验证：**
+4. 调用一个最简单的 MCP 工具指令（如获取场景信息、列出项目结构等），验证 MCP 是否正常响应
+   - 验证通过 → 输出 `✅ [MCP] [MCP名] 已就绪，后续将优先使用 MCP 查询引擎状态`，继续
+   - 验证失败（连接失败 / 权限错误 / 工具无响应 / 账号问题）→ 输出 `⚠️ [MCP] 验证失败：[错误原因]，已降级为读取文件模式`，记录到 `tech-debt.md`，后续改用读取文件
+
+---
+
+## Codex 代码审查工具检查
+
+**完整检查流程（只在项目启动时执行一次）：**
+
+**第一步 — 安装检查：**
+1. 检查 `/codex` 命令是否可用（插件是否已安装）
+2. 未安装 → 提示用户：`⚠️ Codex 插件未安装，建议安装以支持深度代码审查，是否现在安装？`
+   - 用户确认 → 执行安装（`npm install -g @openai/codex` 或对应包管理器）→ 进入第二步
+   - 用户跳过 → 记录到 `tech-debt.md`，后续所有 Codex 审查步骤改用 Claude 自身审查，跳过后续步骤
+3. 已安装 → 直接进入第二步
+
+**第二步 — 账号与可用性验证：**
+4. 尝试简单调用（如 `/codex --version` 或最小任务）验证 Codex 是否正常响应
+   - 验证通过 → 输出 `✅ [Codex] 已就绪，核心逻辑 Phase 将在 commit 前自动触发 adversarial-review`，继续
+   - 验证失败 → 输出 `⚠️ [Codex] 验证失败，请排查以下可能原因：`
+     - 账户欠费 / 额度耗尽 → 检查 OpenAI 账单页面，充值或升级套餐
+     - API Key 未配置 / 已失效 → 重新在环境变量中设置 `OPENAI_API_KEY`
+     - 网络问题 → 检查代理或防火墙设置
+     - 插件版本过旧 → 尝试 `npm update -g @openai/codex`
+   - 提示用户：`是否已解决？解决后重新验证，否则后续审查将降级为 Claude 自身审查。`
+     - 用户已解决 → 重新执行第二步验证
+     - 用户跳过 → 记录到 `tech-debt.md`，后续改用 Claude 自身审查
+
+---
+
 ## GitHub 确认
 
 Ask the user:
@@ -51,6 +109,7 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
     tech-debt.md           ← 技术债，解决后删除，新增时追加
     known-bugs.md          ← 已知 Bug，修复后标记 ✅，新增时追加
     deep-scan-results.md   ← Phase 1 生成，之后不再修改
+    assets-index.json      ← Phase 1 生成，之后不再修改；后续 Phase 需要引用美术资源时直接查询此文件
   logs/
     dev-log.md             ← 每个 Phase 追加，不覆盖
  ```
@@ -81,6 +140,12 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
 - Phase 1 深度扫描完成后创建
 - 包含：硬编码数值、配置文件、交互流程链
 - **之后不再修改**
+
+**assets-index.json**
+- Phase 1 深度扫描 4 完成后创建
+- 包含：所有美术资源的文件名、相对路径、类型分类
+- **之后不再修改**
+- 后续 Phase 需要用到美术资源时，必须先查询此文件，不得重新遍历目录
 
 ---
 
