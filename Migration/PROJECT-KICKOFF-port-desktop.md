@@ -21,15 +21,18 @@
 - **美术资源路径**：XXX（图片、音效、字体等资源的位置）
 - **其他资源路径**：XXX（配置文件、数据文件等，没有就写"无"）
 - **GitHub 仓库路径**：XXX（例：https://github.com/username/repo，没有就写"无"）
-- **CLAUDE.md 模板路径**：XXX（例：E:\skills\CLAUDE.md）
 
 ---
 
-## Skill 路径
+## 工作流文件夹路径
 
-- **Skill Index 文件夹**：XXX（例：E:\skills\port，自动找 00-INDEX.md）
-- **引擎规范文件夹**：XXX（例：E:\skills，根据目标引擎自动匹配对应规范文件）
-- **视觉规范文件夹**：XXX（例：E:\skills，根据目标引擎自动匹配，没有就写"无"）
+- **工作流根目录**：XXX（例：E:\claudeCode\DOC\Migration）
+
+> 填写后自动推导：
+> - CLAUDE.md → `[工作流根目录]\CLAUDE.md`
+> - Skill Index → `[工作流根目录]\Skills\00-INDEX.md`
+> - 引擎规范 → `[工作流根目录]\DEV_RULES\[引擎]-RULES.md`
+> - 视觉规范 → `[工作流根目录]\VISUAL_RULES\[引擎]-VISUAL-RULES.md`
 
 ---
 
