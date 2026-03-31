@@ -137,6 +137,24 @@ Create `./plans/port-<project-name>.md`:
 
 ---
 
+## 计划模板强制规则
+
+生成计划文件时，**最后两个 Phase 必须固定为**：
+
+```
+## Phase N-1: Tech-Debt Cleanup
+**内容**: 清理所有功能开发期间积累的 Medium/Low 技术债（来自 tech-debt.md）
+**前置条件**: 所有功能 Phase 完成，测试全绿
+
+## Phase N: 架构优化
+**内容**: 模块解耦、接口重构、测试覆盖率提升
+**前置条件**: Tech-Debt Cleanup 完成
+```
+
+这两个 Phase 不需要用户要求，规划时自动加入。
+
+---
+
 ## Phase 3 完成后
 
 写入开发日志，检查 git 状态，然后读取 `05-testing.md` 开始移植第一个系统。
