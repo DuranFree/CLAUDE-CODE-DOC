@@ -163,6 +163,19 @@
 
 ---
 
+## Roadmap 修改校验规则
+
+任何时候新增、修改、追加项目计划 roadmap 文件的内容（包括追加新 Phase、调整顺序、修改 Phase 内容），必须先完整读取当前工作流的计划规划文件（migration 工作流：`04-plan.md`；scratch 工作流：`03-prd-plan.md`），逐条对照检查：
+
+- 所有规划规则是否还在被遵守？
+- Phase 顺序和依赖门是否正确？
+- 有没有功能黑洞（功能未分配到任何 Phase）？
+- 最后两个 Phase 是否固定为 Tech-Debt Cleanup + 架构优化？
+
+**不得依赖记忆，必须读文件后才能改 roadmap。**
+
+---
+
 ## 破坏性 Git 操作规则
 
 执行任何破坏性 git 操作前（reset --hard、checkout .、restore .、clean -f、branch -D 等），必须：
