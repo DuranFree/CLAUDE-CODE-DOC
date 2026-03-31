@@ -49,6 +49,22 @@ For each interaction flow found, document the complete chain, for example:
 
 Any flow that crosses 2+ files must be explicitly listed in the feature checklist as a single item, not split across multiple items.
 
+**深度扫描 4 — 美术资源索引：**
+使用 KICKOFF 文档中填写的「美术资源路径」进行扫描（该路径已由用户在项目启动时确认），生成 `plans/assets-index.json`：
+```json
+{
+  "generated": "<date>",
+  "platform": "<target platform>",
+  "source_asset_path": "<KICKOFF 中填写的美术资源路径>",
+  "assets": [
+    { "name": "filename", "path": "相对于美术资源路径的相对路径", "type": "Texture|Audio|Font|Other", "ported": false }
+  ]
+}
+```
+- `ported: false` 表示尚未迁移到目标工程，迁移后更新为 `true`
+- 此文件 Phase 1 生成，后续只在资源迁移时更新 `ported` 字段，不重新扫描
+- **后续所有 Phase 需要引用美术资源时，必须先查询此文件，不得重新遍历目录**
+
 **⚠️ 数据字段验证规则：**
 数据字段存在 ≠ 游戏机制存在。发现任何数据字段时，必须追踪该字段在代码中实际被使用的地方，确认其真实用途，不得仅凭字段名或字段值推断游戏机制。
 
