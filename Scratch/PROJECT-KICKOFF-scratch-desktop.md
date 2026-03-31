@@ -148,7 +148,7 @@ XXX
 ✅/❌ Skill Index 读取
 ✅/❌ 引擎规范读取
 ✅/❌ 视觉规范读取
-✅/❌ Memory 写入（6条规则）
+✅/❌ Memory 写入（7条规则）
 ✅/❌ Git 状态
 ✅/❌ GitHub CLI
 ✅/❌ 引擎可执行文件
