@@ -92,7 +92,7 @@ XXX
 ---
 
 ### 步骤 1 — 复制 CLAUDE.md
-将 CLAUDE.md 复制到目标工程路径根目录。只读取目标工程路径下的 CLAUDE.md，忽略原始代码路径下的任何 CLAUDE.md。
+将 `[工作流根目录]\CLAUDE.md` 复制到目标工程路径根目录。只读取目标工程路径下的 CLAUDE.md，忽略原始代码路径下的任何 CLAUDE.md。
 - ✅ CLAUDE.md 已复制到 [目标工程路径]
 - ❌ 复制失败：[原因]
 
