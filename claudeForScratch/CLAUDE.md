@@ -10,7 +10,10 @@
 - `./plans/known-bugs.md`
 - `./plans/tech-debt.md`
 
-检查 git status，如果项目计划 roadmap 文件出现在修改列表中，立即读取它。
+每次必读：
+- 项目计划 roadmap 文件
+
+检查 git status，如果项目专属索引文件（如资源索引等）出现在修改列表中，立即读取它。
 
 ---
 
