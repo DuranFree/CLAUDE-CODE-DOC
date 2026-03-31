@@ -222,4 +222,4 @@ Always announce status:
 
 ## 所有系统移植完成后
 
-写入开发日志，检查 git 状态，然后读取 `06-architecture.md`。
+写入开发日志，检查 git 状态，然后读取 `05b-tech-debt.md`。

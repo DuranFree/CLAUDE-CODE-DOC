@@ -281,4 +281,4 @@ Always announce status:
 
 写入开发日志，检查 git 状态，继续下一个 Phase。
 
-所有 Phase 完成、项目跑起来后，读取 `05-architecture.md`。
+所有 Phase 完成、项目跑起来后，读取 `04b-tech-debt.md`。
