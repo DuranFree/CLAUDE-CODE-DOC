@@ -149,6 +149,27 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
 
 ---
 
+## 关键文件 git status 监测规则
+
+项目启动时（只执行一次），识别该项目存在哪些关键索引/参考文件，并将对应的 git status 监测规则写入项目 `CLAUDE.md`：
+
+**必须监测的文件（所有项目）：**
+- 项目计划 roadmap 文件 — 已内置于通用 CLAUDE.md，无需额外写入
+
+**按项目类型识别，存在则写入监测规则：**
+- `assets-index.json` 或类似资源索引文件 → 存在时写入：`如果 assets-index.json 出现在 git status 修改列表中，立即读取它`
+- `deep-scan-results.md` — 之后不再修改，无需监测
+- 视觉升级指南（`visual-upgrade-*.md`）— 启动后基本不变，无需监测
+- 移植计划文件（`port-*.md`）— 启动后基本不变，无需监测
+
+**写入格式（追加到项目 CLAUDE.md 的会话开始部分）：**
+```
+检查 git status，如果以下文件出现在修改列表中，立即读取：
+- `plans/assets-index.json`（如该文件存在）
+```
+
+---
+
 ## 玩家操作清单对比规则
 
 每个涉及 UI 或交互的 Phase 开始前，必须先执行以下两步：
