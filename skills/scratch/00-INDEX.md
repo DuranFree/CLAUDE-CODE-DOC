@@ -16,6 +16,7 @@
 | Phase 1 | `02-requirements.md` | Grill Me + 功能清单 |
 | Phase 2 | `03-prd-plan.md` | PRD + 计划拆分 |
 | Phase 3 | `04-tdd.md` | TDD 实现 |
+| Phase 4b | `04b-tech-debt.md` | Tech-Debt Cleanup（功能完成后，架构优化前）|
 | Phase 4 | `05-architecture.md` | 架构优化（项目完成后） |
 
 ---

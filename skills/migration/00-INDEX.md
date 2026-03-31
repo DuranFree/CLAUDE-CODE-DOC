@@ -17,6 +17,7 @@
 | Phase 2 | `03-visual.md` | 视觉分析 + 视觉升级指南 |
 | Phase 3 | `04-plan.md` | 移植计划拆分 |
 | Phase 4 | `05-testing.md` | 行为验证测试（每个系统移植时使用）|
+| Phase 5b | `05b-tech-debt.md` | Tech-Debt Cleanup（功能完成后，架构优化前）|
 | Phase 5 | `06-architecture.md` | 架构优化（移植全部完成后）|
 
 ---
