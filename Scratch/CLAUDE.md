@@ -51,6 +51,7 @@
 
 5. **更新开发日志** — 追加本 Phase 的记录：
    `./logs/dev-log.md`
+   - 写入前必须先读项目 roadmap 文件，用 roadmap 里的 Phase 编号，不得自行递增
 
 6. **检查技术债** — 有新增就追加，已解决就删除：
    `./plans/tech-debt.md`
