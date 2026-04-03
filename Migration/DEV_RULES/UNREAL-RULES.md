@@ -128,14 +128,14 @@ UnrealEditor-Cmd.exe <ProjectPath> -ExecCmds="Automation RunTests <TestName>" -n
 
 ## 常见坑
 
-- `BeginPlay()` 等价于 Unity 的 `Start()`，`Tick()` 等价于 `Update()`
+- `BeginPlay()` 等价于 Unity 的 `Start()`，`Tick()` 等价于 `Update()` ⚠️ [写入CLAUDE.md]
 - `BeginPlay()` 时其他 Actor 不一定已经初始化，跨 Actor 依赖用 `OnActorBeginOverlap` 或 GameMode 管理 ⚠️ [写入CLAUDE.md]
-- `TArray` 是 UE5 的动态数组，不要用 `std::vector`
-- `FString` 是 UE5 的字符串，不要用 `std::string`
-- `UE_LOG` 用于日志输出，不要用 `printf` 或 `std::cout`
-- 编译时间很长，改动要小步提交
+- `TArray` 是 UE5 的动态数组，不要用 `std::vector` ⚠️ [写入CLAUDE.md]
+- `FString` 是 UE5 的字符串，不要用 `std::string` ⚠️ [写入CLAUDE.md]
+- `UE_LOG` 用于日志输出，不要用 `printf` 或 `std::cout` ⚠️ [写入CLAUDE.md]
+- 编译时间很长，改动要小步提交 ⚠️ [写入CLAUDE.md]
 - Hot Reload 不稳定，重大改动后完整重编译 ⚠️ [写入CLAUDE.md]
-- 物理操作在 `PhysicsTick` 或用 `FBodyInstance` 直接操作
+- 物理操作在 `PhysicsTick` 或用 `FBodyInstance` 直接操作 ⚠️ [写入CLAUDE.md]
 - UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
 
 ---
