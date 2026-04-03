@@ -146,6 +146,7 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
 - 包含：所有美术资源的文件名、相对路径、类型分类
 - **之后不再修改**
 - 后续 Phase 需要用到美术资源时，必须先查询此文件，不得重新遍历目录
+- 创建完成后，立即将路径存入 memory（类型：reference，内容：美术资源索引路径为 `plans/assets-index.json`）
 
 ---
 

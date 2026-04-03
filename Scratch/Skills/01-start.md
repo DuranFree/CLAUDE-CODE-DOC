@@ -150,7 +150,7 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
 - 项目计划 roadmap 文件 — 已内置于通用 CLAUDE.md，无需额外写入
 
 **按项目类型识别，存在则写入监测规则：**
-- 资源索引文件（如 `assets-index.json` 或类似文件）→ 存在时写入：`如果资源索引文件出现在 git status 修改列表中，立即读取它`
+- 资源索引文件（如 `assets-index.json` 或类似文件）→ 存在时写入：`如果资源索引文件出现在 git status 修改列表中，立即读取它`；同时将路径存入 memory（类型：reference，内容：美术资源索引路径）
 - `deep-scan-results.md` — 之后不再修改，无需监测
 
 **写入格式（追加到项目 CLAUDE.md 的会话开始部分）：**
