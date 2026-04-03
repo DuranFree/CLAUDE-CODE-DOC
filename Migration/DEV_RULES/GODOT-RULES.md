@@ -196,11 +196,12 @@ godot --headless -s res://addons/gut/gut_cmdln.gd
 
 ## 常见坑
 
-- `_ready()` 里访问其他节点时，确保那个节点已经在场景树里
+- `_ready()` 里访问其他节点时，确保那个节点已经在场景树里 ⚠️ [写入CLAUDE.md]
 - `@export` 变量在编辑器里设置后，运行时不要再用代码覆盖
-- `Variant` 类型的警告默认是 warning，但很多项目设置为 error，一律避免使用
+- `Variant` 类型的警告默认是 warning，但很多项目设置为 error，一律避免使用 ⚠️ [写入CLAUDE.md]
 - `int / int` 在 GDScript 里结果还是 `int`，需要浮点除法用 `float(a) / float(b)`
 - 信号连接推荐用代码连接而不是编辑器连接，方便追踪
+- UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
 
 ---
 

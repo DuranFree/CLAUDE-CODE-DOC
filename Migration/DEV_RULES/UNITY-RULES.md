@@ -139,12 +139,13 @@ PlayMode 测试放在 `Assets/Tests/PlayMode/` 目录。
 ## 常见坑
 
 - `Awake()` 早于 `Start()`，跨组件初始化顺序依赖时要注意
-- `OnDestroy()` 里必须取消事件订阅，否则内存泄漏
+- `OnDestroy()` 里必须取消事件订阅，否则内存泄漏 ⚠️ [写入CLAUDE.md]
 - `Time.deltaTime` 在 `FixedUpdate()` 里用 `Time.fixedDeltaTime`
 - `Resources.Load()` 性能差，用 Addressables 或直接引用
-- 不要在运行时用 `GameObject.Find()`，提前缓存引用
+- 不要在运行时用 `GameObject.Find()`，提前缓存引用 ⚠️ [写入CLAUDE.md]
 - `string` 拼接在热路径里用 `StringBuilder`
 - Physics 操作放在 `FixedUpdate()`，输入检测放在 `Update()`
+- UI 元素定位超出父容器边界时（pivot + offset 导致跑出 rect 范围），必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
 
 ---
 
