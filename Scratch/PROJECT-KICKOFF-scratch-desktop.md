@@ -17,6 +17,7 @@
 
 - **项目工程路径**：XXX（新项目将在这里创建，例：E:\Projects\MyGame）
 - **美术资源路径**：XXX（图片、音效、字体等资源的位置，没有就写"待定"）
+- **外部资产来源**：XXX（其他工程里的美术/特效资源路径，例：E:\Projects\OtherGame\Assets\FX；多个路径用逗号分隔；没有就写"无"）
 - **GitHub 仓库路径**：XXX（例：https://github.com/username/repo，没有就写"无"）
 
 ---

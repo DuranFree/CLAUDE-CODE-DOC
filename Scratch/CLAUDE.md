@@ -20,11 +20,22 @@
 - `./plans/tech-debt.md`
 - 项目计划 roadmap 文件
 
+读取完成后，立即检查 git 状态：
+- 执行 `git status` 检查是否有未提交的修改
+- 执行 `git log origin/master..HEAD` 检查是否有未推送的 commit
+- 有未提交修改 → 告知用户：`⚠️ 检测到上次 Phase 有未提交内容，正在补 commit 并推送...`，自动 commit（commit message 基于 dev-log 最后一条 Phase 记录），然后 push
+- 有未推送 commit → 告知用户：`⚠️ 检测到上次 Phase 有未推送内容，正在补推...`，直接 push
+- push 失败 → 告知用户：`⚠️ [版本控制] push 失败，请检查网络或远程仓库状态`
+- 全部干净 → 静默继续，不打扰用户
+
 以上 4 个文件构成最小上下文。除非任务需要，不进行代码文件的全量或无目的预读；在执行任务时按调用链逐步加载相关代码。
 
 **开始新 Phase 前必须读取：**
 - `./plans/feature-checklist.md`
 - `./plans/visual-checklist.md`（如有，PRD 包含视觉需求时才存在）
+- `./plans/assets-index.json`（如存在）— 了解当前可用美术资产，涉及美术资源的决策必须基于此文件
+  - ⚠️ 禁止用 Read 工具直接读此文件（文件过大，Read 只能读到头部，会漏掉后半段资产）
+  - 必须用 python/bash 脚本按关键词过滤查询，例如：`python3 -c "import json; data=json.load(open('plans/assets-index.json')); [print(a['name'],a['path']) for a in data['assets'] if 'FX' in a['path']]"`
 
 检查 git status，如果项目专属索引文件（如资源索引等）出现在修改列表中，立即读取它。
 
@@ -116,16 +127,25 @@
   - 先调用引擎 MCP 场景保存工具清除当前 dirty 状态
   - 再查 memory 获取项目指定方式执行场景重建
   - memory 中无记录 → 询问用户"项目是否有场景重建方式"，用户回答后立即存入 memory，没有则跳过此步
+- **MCP 全量测试超时时，优先分批跑（比 batchmode 快很多）：**
+  - 按测试类/命名空间拆分多次 `run_tests(testFilter=...)`，每批控制在合理数量
+  - 分批全部通过 = 等价于全量全绿
+  - 分批也超时 → 再退回 batchmode
+- **MCP run_tests 超时后禁止立即重试：** 超时不代表测试没跑，只是 MCP 等不到结果。TestRunner 可能仍在后台执行，重试会导致请求排队堆积。超时后必须：
+  1. 先调用 `recompile_scripts` 重置 TestRunner 队列（重编译会打断排队的测试）
+  2. 用 `get_console_logs` 检查是否有编译错误
+  3. 确认编译通过后再发下一次测试请求
 - MCP run_tests 出错 / 超时 / 无响应时，**必须按以下顺序排查，不得直接杀编辑器**：
-  1. 等待 30 秒后重试 MCP（可能正在编译）
-  2. 仍无响应 → 再等待 30 秒后重试 MCP（最多等待 2 次共 1 分钟）
-  3. 仍无响应 → 调用引擎 MCP 场景保存工具探测状态：
+  1. 先尝试分批跑测试（见上条）
+  2. 等待 30 秒后重试 MCP（可能正在编译）
+  3. 仍无响应 → 再等待 30 秒后重试 MCP（最多等待 2 次共 1 分钟）
+  4. 仍无响应 → 调用引擎 MCP 场景保存工具探测状态：
      - 报 "play mode" 错误 → 立刻停止 Play Mode，再重试 run_tests
      - 保存成功 → 说明不在 Play Mode，等待编译完成后重试 MCP
-  4. 仍无响应 → 停止 Play Mode（如尚未停止）
-  5. 重试 MCP
-  6. 等待编译完成
-  7. 再次重试 MCP
+  5. 仍无响应 → 停止 Play Mode（如尚未停止）
+  6. 重试 MCP
+  7. 等待编译完成
+  8. 再次重试 MCP
   - 以上全部完成后仍然失败 / 卡死 → 强制关闭引擎，切换 batchmode / headless，告知用户：`⚠️ 已强制关闭 [引擎名]，正在后台启动测试...`
     - Windows：`cmd.exe //C "taskkill /F /IM 进程名.exe"`，不可直接调用 taskkill
     - 关闭后必须用进程列表确认进程已退出（`tasklist` / `ps`），验证失败则重试，不得假设成功
@@ -180,6 +200,12 @@
 - 最后两个 Phase 是否固定为 Tech-Debt Cleanup + 架构优化？
 
 **不得依赖记忆，必须读文件后才能改 roadmap。**
+
+**新增 Phase 后必须同步清单（不可跳过）：**
+roadmap 新增 Phase 后，立即把该 Phase 涉及的条目追加到对应清单，标记为 `[ ]`：
+- 功能项 → `plans/feature-checklist.md`
+- 视觉/特效/动画项 → `plans/visual-checklist.md`
+- 没有视觉项的 Phase 不需要追加 visual-checklist，但必须明确说明跳过原因
 
 ---
 

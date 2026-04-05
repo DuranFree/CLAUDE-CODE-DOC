@@ -115,6 +115,7 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
     tech-debt.md           ← 技术债，解决后删除，新增时追加
     known-bugs.md          ← 已知 Bug，修复后标记 ✅，新增时追加
     deep-scan-results.md   ← Phase 1 生成，之后不再修改
+    assets-index.json      ← Phase 1 生成，之后不再修改；后续 Phase 需要引用美术资源时直接查询此文件
   logs/
     dev-log.md             ← 每个 Phase 追加，不覆盖
  ```
@@ -145,6 +146,29 @@ After every Phase, automatically append to `./logs/dev-log.md` in the current pr
 - Phase 1 深度扫描完成后创建
 - 包含：硬编码数值、配置文件、交互流程链
 - **之后不再修改**
+
+**assets-index.json**
+- Phase 1 完成后创建（在确认美术资源路径后立即生成）
+- 包含：所有美术资源的文件名、相对路径、类型分类，以及 `source` 字段标注来源（`"local"` = 本项目美术资源路径，`"external:<路径>"` = 外部工程资源）
+- **之后不再修改**
+- 后续 Phase 需要用到美术资源时，必须先查询此文件，不得重新遍历目录
+- 创建完成后，立即将路径存入 memory（类型：reference，内容：美术资源索引路径为 `plans/assets-index.json`）
+
+**外部资产来源扫描规则**
+- 创建 `assets-index.json` 时，读取 Kickoff 文档中的 `外部资产来源` 字段：
+  - 值为 `"无"` → 仅扫描本项目美术资源路径，跳过以下步骤
+  - 值为路径（可多个，逗号分隔）→ 对每个路径执行以下操作：
+    1. 验证路径是否存在；不存在 → 告知用户并跳过该路径
+    2. **给的是根目录，必须递归遍历整棵目录树**，按以下扩展名过滤出美术资产：
+       - 贴图/图片：`.png .jpg .jpeg .psd .tga .bmp .gif .tiff .exr .hdr`
+       - 音效：`.wav .ogg .mp3 .aiff .flac`
+       - 字体：`.ttf .otf`
+       - 视频/序列帧：`.mp4 .webm .avi`
+       - 不收录：`.cs .js .json .xml .yaml .meta .unity .prefab .asset` 等代码/配置/引擎文件
+    3. 将结果追加到 `assets-index.json`，每条记录加 `"source": "external:<根目录路径>"` 字段，`path` 字段存相对于该根目录的路径
+  - 扫描完成后，在索引文件顶部注明各来源根目录，方便后续查阅
+- 本项目美术资源路径（Kickoff 文档中的 `美术资源路径`）不填或填"待定"时，跳过本地扫描，仅处理外部来源
+- 所有来源均为空/无/待定时 → 仍然创建 `assets-index.json`（空数组 `[]`），告知用户后继续，不阻塞流程
 
 ---
 

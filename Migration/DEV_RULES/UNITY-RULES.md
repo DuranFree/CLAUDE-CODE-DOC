@@ -193,6 +193,72 @@ var target = possibleTarget != null ? possibleTarget : defaultTarget;
 
 ---
 
+## 动画规范
+
+**补间动画一律使用 DOTween，禁止手写协程插值。**
+
+适用范围：所有非骨骼动画，包括但不限于：
+- UI 弹窗、淡入淡出、滑动、缩放
+- 数字滚动、进度条填充
+- 卡牌/棋子/道具的移动、旋转、缩放
+- 镜头震屏、跟随、FOV 变化
+- 颜色/alpha 渐变
+- 循环脉冲、呼吸效果
+
+**不适用（继续使用 Animator Controller）：**
+- 2D/3D 骨骼动画（Spine、骨骼 rig）
+- 多状态切换状态机（idle → walk → run → jump）
+- Blend Tree 混合动画
+
+```csharp
+// ❌ 禁止 — 手写协程插值
+IEnumerator FadeOut(CanvasGroup cg)
+{
+    float t = 0f;
+    while (t < 1f)
+    {
+        t += Time.deltaTime / 0.5f;
+        cg.alpha = Mathf.Lerp(1f, 0f, t);
+        yield return null;
+    }
+}
+
+// ✅ 正确 — DOTween 一行搞定
+cg.DOFade(0f, 0.5f).SetEase(Ease.OutQuad);
+```
+
+```csharp
+// ❌ 禁止 — 手写 MoveTowards 循环
+IEnumerator MoveCard(Transform card, Vector3 target)
+{
+    while (Vector3.Distance(card.position, target) > 0.01f)
+    {
+        card.position = Vector3.MoveTowards(card.position, target, 5f * Time.deltaTime);
+        yield return null;
+    }
+}
+
+// ✅ 正确 — DOTween
+card.DOMove(target, 0.3f).SetEase(Ease.OutQuad);
+```
+
+**多段序列动画用 Sequence：**
+```csharp
+// 战斗冲锋：后撤 → 冲向目标 → 回弹
+var seq = DOTween.Sequence();
+seq.Append(card.DOMove(backPos, 0.3f).SetEase(Ease.OutQuad));
+seq.Append(card.DOMove(targetPos, 0.1f).SetEase(Ease.InQuad));
+seq.Append(card.DOMove(originPos, 0.3f).SetEase(Ease.OutBack));
+seq.OnComplete(() => OnCombatEnd());
+```
+
+**安装方式：**
+- Asset Store 免费版：`DOTween (HOTween v2)`
+- 或 OpenUPM：`openupm add com.demigiant.dotween`
+- 导入后运行 `Tools > Demigiant > DOTween Utility Panel > Setup DOTween`
+
+---
+
 ## Git 管理规则
 
 **必须排除的文件夹：**

@@ -19,6 +19,7 @@
 - **原始代码路径**：XXX（原版项目的完整路径，例：E:\Projects\OriginalGame）
 - **目标工程路径**：XXX（移植后的新项目路径，例：E:\Projects\NewGame）
 - **美术资源路径**：XXX（图片、音效、字体等资源的位置）
+- **外部资产来源**：XXX（其他工程里的美术/特效资源路径，例：E:\Projects\OtherGame\Assets\FX；多个路径用逗号分隔；没有就写"无"）
 - **其他资源路径**：XXX（配置文件、数据文件等，没有就写"无"）
 - **GitHub 仓库路径**：XXX（例：https://github.com/username/repo，没有就写"无"）
 
