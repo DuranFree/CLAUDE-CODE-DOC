@@ -357,11 +357,12 @@ public static class AutoSaveScene
 }
 ```
 
-**脚本创建后，将以下规则写入项目 `CLAUDE.md`：**
+**脚本创建後，将以下规则写入项目 `CLAUDE.md`：**
 
 ```
-## MCP 场景自动存盘
-项目已安装 AutoSaveScene.cs Editor 脚本，场景有变动后 2 秒自动保存。
-MCP 修改组件/GameObject 后无需手动调用 save_scene，控制台会打印 [AutoSave] 场景已自动保存 确认。
-注意：Build Game Scene（SceneBuilder）内部自带保存，调用后同样无需额外 save_scene。
+## MCP 场景存盘
+MCP 修改组件/GameObject 后必须立即调用 save_scene，防止 dirty 状态触发保存弹窗卡住 MCP。
+注意：Build Game Scene（SceneBuilder）内部自带保存，调用后无需额外 save_scene。
 ```
+
+> ⚠️ 注意：自动存盘脚本（hierarchyChanged + Undo.postprocessModifications）在时序上无法保证在 Unity 弹出保存弹窗之前完成保存，不可靠。**Unity MCP 项目必须手动 save_scene，不依赖自动存盘机制。**

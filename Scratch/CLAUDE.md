@@ -191,13 +191,10 @@
 
 **⚠️ MCP 修改场景后必须立即保存（不可跳过）：** 任何通过 MCP 修改场景内容的操作（添加/删除/修改对象、组件属性等）完成后，必须**立即**调用引擎 MCP 的场景保存工具，防止场景处于 dirty 状态，避免后续操作触发引擎保存弹窗导致 MCP 超时。**每次修改后都要执行，不得批量延后。**
 
-**💡 推荐：安装自动存盘脚本（一次性配置，永久生效）**
-接入任何引擎 MCP 后，优先安装对应引擎的自动存盘机制（详见各引擎 DEV_RULES 的"MCP 场景自动存盘"章节）：
-- **Unity** → 创建 `Assets/Scripts/Editor/AutoSaveScene.cs`（监听 hierarchyChanged，2 秒防抖自动保存）
-- **Godot** → 创建 `addons/auto_save/auto_save_plugin.gd` EditorPlugin（监听节点增删，2 秒防抖）
-- **UE5** → 启用内置 AutoSave（Editor Preferences > Auto Save，间隔 30 秒）或部署 Python 插件
-
-安装后在项目 `CLAUDE.md` 中标注已安装，后续 MCP 修改场景无需手动 `save_scene`。
+**💡 各引擎 MCP 存盘策略：**
+- **Unity** → 自动存盘时序不可靠，**必须在每次 MCP 修改后手动调用 save_scene**
+- **Godot** → 可安装 `addons/auto_save/auto_save_plugin.gd` EditorPlugin 自动存盘（见 GODOT-RULES.md）
+- **UE5** → 启用内置 AutoSave（Editor Preferences > Auto Save，间隔 30 秒）或部署 Python 插件（见 UNREAL-RULES.md）
 
 ---
 
