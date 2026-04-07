@@ -126,6 +126,83 @@ UnrealEditor-Cmd.exe <ProjectPath> -ExecCmds="Automation RunTests <TestName>" -n
 
 ---
 
+## 动画规范
+
+**程序化补间动画一律使用 FTimeline 或 UTimelineComponent，禁止手写 Tick 插值循环。**
+
+适用范围：所有非骨骼动画，包括但不限于：
+- UI 弹窗、淡入淡出、滑动、缩放
+- 数字滚动、进度条填充
+- 卡牌/棋子/道具的移动、旋转、缩放
+- 镜头震屏、跟随、FOV 变化
+- 颜色/alpha 渐变
+- 循环脉冲、呼吸效果
+
+**不适用（继续使用 Animation Blueprint / Montage）：**
+- 骨骼动画（Skeleton Mesh）
+- 多状态切换状态机（idle → walk → run → jump）
+- Blend Space 混合动画
+- AnimMontage 攻击/技能动画
+
+**C++ Timeline 用法：**
+```cpp
+// ❌ 禁止 — 手写 Tick 插值
+void AMyActor::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    Alpha -= DeltaTime / 0.5f;
+    MeshComp->SetScalarParameterValueOnMaterials(TEXT("Opacity"), Alpha);
+}
+
+// ✅ 正确 — UTimelineComponent
+// .h
+UPROPERTY()
+UTimelineComponent* FadeTimeline;
+
+UPROPERTY()
+UCurveFloat* FadeCurve;
+
+UFUNCTION()
+void OnFadeUpdate(float Value);
+
+// .cpp
+void AMyActor::BeginPlay()
+{
+    Super::BeginPlay();
+
+    FOnTimelineFloat UpdateDelegate;
+    UpdateDelegate.BindUFunction(this, FName("OnFadeUpdate"));
+    FadeTimeline->AddInterpFloat(FadeCurve, UpdateDelegate);
+    FadeTimeline->PlayFromStart();
+}
+
+void AMyActor::OnFadeUpdate(float Value)
+{
+    MeshComp->SetScalarParameterValueOnMaterials(TEXT("Opacity"), Value);
+}
+```
+
+**Blueprint 中直接用 Timeline 节点：**
+- 在蓝图 EventGraph 中添加 Timeline 节点
+- 双击编辑曲线，可视化调整 Ease
+- 连接 Update 引脚到 Set 属性节点
+
+**轻量替代方案（简单一次性动画）：**
+```cpp
+// FLatentActionInfo + UKismetSystemLibrary::MoveComponentTo
+// 适合简单的位移/旋转，不需要完整 Timeline
+
+// 或使用第三方插件 BUITween / iTween for UE
+// API 更接近 DOTween 风格，适合大量程序化动画
+```
+
+**清理规则：**
+- Timeline 绑定在 Actor 上，Actor 销毁时自动清理
+- 手动停止用 `FadeTimeline->Stop()`
+- `OnDestroy()` 中解绑委托防止悬挂引用
+
+---
+
 ## 常见坑
 
 - `BeginPlay()` 等价于 Unity 的 `Start()`，`Tick()` 等价于 `Update()` ⚠️ [写入CLAUDE.md]
@@ -242,3 +319,18 @@ git push
 ```
 
 **确认 .gitignore 已包含以上路径后再 push，否则下次还会上传。**
+
+---
+
+## MCP 僵尸进程清理
+
+如果项目使用了引擎 MCP Server，Windows 上 Claude Code 关闭 session 时可能不清理子进程，导致僵尸进程堆积、MCP 连接不稳定。
+
+**首次接入 MCP 时，检查 `.mcp.json` 的 `command` 字段，确认 MCP Server 使用的运行时进程名（如 `node`、`python`、`dotnet` 等），然后在项目 `CLAUDE.md` 的"每次新会话开始时执行"部分加入对应的清理规则：**
+
+```
+每次新会话开始时执行：
+- 检查 <进程名> 进程数量
+- 超过 10 个 → 全部杀掉（Claude Code 会自动重启需要的那个）
+- 10 个以下 → 静默继续
+```

@@ -194,6 +194,69 @@ godot --headless -s res://addons/gut/gut_cmdln.gd
 
 ---
 
+## 动画规范
+
+**补间动画一律使用内置 Tween，禁止手写 _process 插值循环。**
+
+适用范围：所有非骨骼动画，包括但不限于：
+- UI 弹窗、淡入淡出、滑动、缩放
+- 数字滚动、进度条填充
+- 卡牌/棋子/道具的移动、旋转、缩放
+- 镜头震屏、跟随、FOV 变化
+- 颜色/alpha 渐变
+- 循环脉冲、呼吸效果
+
+**不适用（继续使用 AnimationPlayer / AnimationTree）：**
+- 2D/3D 骨骼动画（Spine、骨骼 rig）
+- 多状态切换状态机（idle → walk → run → jump）
+- Blend Tree 混合动画
+
+```gdscript
+# ❌ 禁止 — 手写 _process 插值
+var _alpha: float = 1.0
+var _fading: bool = false
+
+func _process(delta: float) -> void:
+    if _fading:
+        _alpha -= delta / 0.5
+        modulate.a = _alpha
+        if _alpha <= 0.0:
+            _fading = false
+
+# ✅ 正确 — Tween 一行搞定
+func fade_out() -> void:
+    var tween: Tween = create_tween()
+    tween.tween_property(self, "modulate:a", 0.0, 0.5).set_ease(Tween.EASE_OUT)
+```
+
+```gdscript
+# ❌ 禁止 — 手写 move_toward 循环
+func _process(delta: float) -> void:
+    position = position.move_toward(target_pos, 300.0 * delta)
+
+# ✅ 正确 — Tween
+func move_to(target: Vector2) -> void:
+    var tween: Tween = create_tween()
+    tween.tween_property(self, "position", target, 0.3).set_ease(Tween.EASE_OUT)
+```
+
+**多段序列动画：**
+```gdscript
+# 战斗冲锋：后撤 → 冲向目标 → 回弹
+func charge_attack(back_pos: Vector2, target_pos: Vector2, origin_pos: Vector2) -> void:
+    var tween: Tween = create_tween()
+    tween.tween_property(self, "position", back_pos, 0.3).set_ease(Tween.EASE_OUT)
+    tween.tween_property(self, "position", target_pos, 0.1).set_ease(Tween.EASE_IN)
+    tween.tween_property(self, "position", origin_pos, 0.3).set_trans(Tween.TRANS_BACK)
+    tween.tween_callback(on_combat_end)
+```
+
+**清理规则：**
+- 创建新 Tween 前，如果之前有正在运行的 Tween 需要先 `kill()`
+- 节点被 `queue_free()` 时，所有通过 `create_tween()` 创建的 Tween 会自动停止，无需手动清理
+
+---
+
 ## 常见坑
 
 - `_ready()` 里访问其他节点时，确保那个节点已经在场景树里 ⚠️ [写入CLAUDE.md]
@@ -227,3 +290,18 @@ git push
 ```
 
 **确认 .gitignore 已包含以上路径后再 push，否则下次还会上传。**
+
+---
+
+## MCP 僵尸进程清理
+
+如果项目使用了引擎 MCP Server，Windows 上 Claude Code 关闭 session 时可能不清理子进程，导致僵尸进程堆积、MCP 连接不稳定。
+
+**首次接入 MCP 时，检查 `.mcp.json` 的 `command` 字段，确认 MCP Server 使用的运行时进程名（如 `node`、`python`、`dotnet` 等），然后在项目 `CLAUDE.md` 的"每次新会话开始时执行"部分加入对应的清理规则：**
+
+```
+每次新会话开始时执行：
+- 检查 <进程名> 进程数量
+- 超过 10 个 → 全部杀掉（Claude Code 会自动重启需要的那个）
+- 10 个以下 → 静默继续
+```

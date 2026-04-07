@@ -286,3 +286,19 @@ git push
 ```
 
 **确认 .gitignore 已包含以上路径后再 push，否则下次还会上传。**
+
+---
+
+## MCP 僵尸进程清理
+
+Unity MCP（mcp-unity）使用 Node.js 作为 Bridge Server。Windows 上 Claude Code 关闭 session 时经常不清理子进程，导致 `node.exe` 僵尸堆积，大量进程同时抢 WebSocket 连接，造成 MCP 超时和连接不稳定。
+
+**首次读取本规则后，必须将以下清理规则写入项目 `CLAUDE.md` 的"每次新会话开始时执行"部分：**
+
+```
+**MCP 僵尸进程清理（每次新会话开始时执行）：**
+- 执行 `tasklist | grep -c "node.exe"` 检查 node 进程数量
+- 如果超过 10 个 → 说明有僵尸 MCP 进程堆积，执行 `cmd.exe //C "taskkill /F /IM node.exe"` 全部杀掉（Claude Code 会自动重启需要的那个）
+- 杀完后告知用户：`⚠️ [MCP 清理] 检测到 N 个僵尸 node 进程，已全部清理`
+- 10 个以下 → 静默继续
+```
