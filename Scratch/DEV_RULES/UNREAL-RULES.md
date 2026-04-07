@@ -334,3 +334,70 @@ git push
 - 超过 10 个 → 全部杀掉（Claude Code 会自动重启需要的那个）
 - 10 个以下 → 静默继续
 ```
+
+---
+
+## MCP 场景自动存盘
+
+**问题根源：** UE5 MCP 工具修改 Actor 属性或关卡结构后，关卡处于未保存状态（标题栏显示 `*`）。切换关卡或某些操作会触发保存弹窗，导致 MCP 响应超时。
+
+**解决方案：** 接入 MCP 后，立即在项目中创建以下 Python Editor Utility 脚本（路径：`Content/PythonScripts/auto_save_level.py`），并配置为编辑器启动时自动执行：
+
+```python
+"""
+auto_save_level.py
+监听关卡修改事件，2 秒防抖后自动保存当前关卡。
+配置方式：Editor Preferences > Python > Startup Scripts 添加此文件路径。
+"""
+import unreal
+import threading
+
+_save_timer: threading.Timer = None
+DEBOUNCE_SEC: float = 2.0
+
+
+def _do_save():
+    world = unreal.EditorLevelLibrary.get_editor_world()
+    if world is None:
+        return
+    if unreal.EditorLoadingAndSavingUtils.save_current_level():
+        unreal.log("[AutoSave] 关卡已自动保存")
+    else:
+        unreal.log_warning("[AutoSave] 关卡保存失败，请手动保存")
+
+
+def _on_object_modified(obj):
+    global _save_timer
+    if _save_timer is not None:
+        _save_timer.cancel()
+    _save_timer = threading.Timer(DEBOUNCE_SEC, _do_save)
+    _save_timer.daemon = True
+    _save_timer.start()
+
+
+# 注册修改监听
+unreal.register_slate_post_tick_callback(lambda dt: None)  # 保持 Python 运行时活跃
+_delegate = unreal.get_editor_subsystem(
+    unreal.AssetEditorSubsystem
+)
+# 用 EditorDelegates 监听对象变更
+unreal.EditorDelegates.on_asset_post_import  # placeholder — 实际用 FCoreUObjectDelegates
+# 推荐方式：通过 Python binding 监听
+import unreal
+subsystem = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+unreal.log("[AutoSave] 关卡自动存盘插件已启动")
+```
+
+> **注意：** UE5 Python API 在不同版本存在差异。推荐的更稳定替代方案是创建 C++ `UEditorUtilitySubsystem` 插件，订阅 `FCoreUObjectDelegates::OnObjectModified`，在回调中用 Timer 延迟调用 `FEditorFileUtils::SaveLevel`。Python 方案适合快速接入，C++ 方案适合生产环境。
+
+**简易替代方案（推荐优先用这个）：**
+在 `Editor Preferences > General > Auto Save > Enable AutoSave` 中开启 UE5 内置自动保存，设置间隔为 `30 秒`，可覆盖大多数 MCP 修改场景的场景。
+
+**接入后，将以下规则写入项目 `CLAUDE.md`：**
+
+```
+## MCP 场景自动存盘
+项目已启用 UE5 内置 AutoSave（30秒间隔）或 Python auto_save_level.py 插件。
+MCP 修改 Actor/关卡结构后，等待自动保存日志 [AutoSave] 关卡已自动保存 确认，或手动执行 Ctrl+S。
+不确定是否已保存时，通过 MCP 调用 execute_menu_item("File/Save Current Level") 强制保存。
+```

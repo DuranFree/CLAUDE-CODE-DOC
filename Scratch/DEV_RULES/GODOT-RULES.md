@@ -305,3 +305,63 @@ git push
 - 超过 10 个 → 全部杀掉（Claude Code 会自动重启需要的那个）
 - 10 个以下 → 静默继续
 ```
+
+---
+
+## MCP 场景自动存盘
+
+**问题根源：** Godot MCP 工具（如 `godot-mcp`）修改场景节点后，编辑器场景处于未保存状态。切换场景或关闭编辑器时会弹出保存对话框，导致 MCP 响应超时。
+
+**解决方案：** 接入 MCP 后，立即在项目中创建以下 EditorPlugin（路径：`addons/auto_save/auto_save_plugin.gd`），并在 `Project > Project Settings > Plugins` 中启用：
+
+```gdscript
+@tool
+extends EditorPlugin
+
+const DEBOUNCE_SEC: float = 2.0
+var _timer: float = -1.0
+var _dirty: bool = false
+
+func _enter_tree() -> void:
+    get_editor_interface().get_edited_scene_root() # warm up
+    # 监听场景树变动
+    get_tree().node_added.connect(_on_scene_changed)
+    get_tree().node_removed.connect(_on_scene_changed)
+
+func _exit_tree() -> void:
+    if get_tree().node_added.is_connected(_on_scene_changed):
+        get_tree().node_added.disconnect(_on_scene_changed)
+    if get_tree().node_removed.is_connected(_on_scene_changed):
+        get_tree().node_removed.disconnect(_on_scene_changed)
+
+func _on_scene_changed(_node: Node = null) -> void:
+    _dirty = true
+    _timer = DEBOUNCE_SEC
+
+func _process(delta: float) -> void:
+    if not _dirty: return
+    _timer -= delta
+    if _timer > 0.0: return
+    _dirty = false
+    var scene_root: Node = get_editor_interface().get_edited_scene_root()
+    if scene_root == null: return
+    var path: String = scene_root.scene_file_path
+    if path.is_empty(): return
+    var packed: PackedScene = PackedScene.new()
+    packed.pack(scene_root)
+    ResourceSaver.save(packed, path)
+    print("[AutoSave] 场景已自动保存: ", path)
+```
+
+**注意事项：**
+- 该插件只监听节点增删，不监听属性变化。如果 MCP 只修改了属性（如位置、颜色），仍需手动保存或在 MCP 操作后调用 `save_scene`。
+- Godot 4.x 内置自动保存（`Editor > Editor Settings > Auto Save On Focus Lost`），可作为补充，但响应更慢。
+
+**插件创建后，将以下规则写入项目 `CLAUDE.md`：**
+
+```
+## MCP 场景自动存盘
+项目已安装 auto_save EditorPlugin，节点增删后 2 秒自动保存场景。
+MCP 修改节点结构后无需手动保存，控制台打印 [AutoSave] 场景已自动保存 确认。
+注意：MCP 只修改属性（位置/颜色等）时自动存盘不触发，需手动调用 save_scene 或确认已保存。
+```

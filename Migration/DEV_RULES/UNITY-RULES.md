@@ -302,3 +302,66 @@ Unity MCP（mcp-unity）使用 Node.js 作为 Bridge Server。Windows 上 Claude
 - 杀完后告知用户：`⚠️ [MCP 清理] 检测到 N 个僵尸 node 进程，已全部清理`
 - 10 个以下 → 静默继续
 ```
+
+---
+
+## MCP 场景自动存盘
+
+**问题根源：** `mcp-unity` 的 `update_component`、`update_gameobject` 等工具直接修改 Unity 场景内存，但不自动保存。场景进入 dirty 状态后，Unity 在进入 Play Mode / 切换场景 / 跑测试时会弹出"是否保存"对话框，导致 MCP 工具等待响应超时。
+
+**解决方案：** 接入 `mcp-unity` 后，立即在项目中创建以下 Editor 脚本（路径：`Assets/Scripts/Editor/AutoSaveScene.cs`）：
+
+```csharp
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+
+/// <summary>
+/// 监听 Hierarchy 变动，2 秒防抖后自动保存场景，防止 MCP 修改后忘记 save_scene 导致弹窗卡住。
+/// </summary>
+[InitializeOnLoad]
+public static class AutoSaveScene
+{
+    private const double DEBOUNCE_SECONDS = 2.0;
+    private static double _lastDirtyTime = -1;
+    private static bool _scheduled = false;
+
+    static AutoSaveScene()
+    {
+        EditorApplication.hierarchyChanged += OnHierarchyChanged;
+        EditorApplication.update += OnUpdate;
+    }
+
+    private static void OnHierarchyChanged()
+    {
+        if (Application.isPlaying) return;
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.isDirty) return;
+        _lastDirtyTime = EditorApplication.timeSinceStartup;
+        _scheduled = true;
+    }
+
+    private static void OnUpdate()
+    {
+        if (!_scheduled) return;
+        if (Application.isPlaying) { _scheduled = false; return; }
+        if (EditorApplication.timeSinceStartup - _lastDirtyTime < DEBOUNCE_SECONDS) return;
+        _scheduled = false;
+        var scene = SceneManager.GetActiveScene();
+        if (scene.isDirty)
+        {
+            EditorSceneManager.SaveScene(scene);
+            UnityEngine.Debug.Log("[AutoSave] 场景已自动保存");
+        }
+    }
+}
+```
+
+**脚本创建后，将以下规则写入项目 `CLAUDE.md`：**
+
+```
+## MCP 场景自动存盘
+项目已安装 AutoSaveScene.cs Editor 脚本，场景有变动后 2 秒自动保存。
+MCP 修改组件/GameObject 后无需手动调用 save_scene，控制台会打印 [AutoSave] 场景已自动保存 确认。
+注意：Build Game Scene（SceneBuilder）内部自带保存，调用后同样无需额外 save_scene。
+```

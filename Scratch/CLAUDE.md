@@ -1,4 +1,4 @@
-# CLAUDE.md — 从零开发项目全局规则（From-Scratch）
+# CLAUDE.md — 移植项目全局规则（Migration）
 
 ## 六条执行铁律
 
@@ -32,7 +32,7 @@
 
 **开始新 Phase 前必须读取：**
 - `./plans/feature-checklist.md`
-- `./plans/visual-checklist.md`（如有，PRD 包含视觉需求时才存在）
+- `./plans/visual-checklist.md`
 - `./plans/assets-index.json`（如存在）— 了解当前可用美术资产，涉及美术资源的决策必须基于此文件
   - ⚠️ 禁止用 Read 工具直接读此文件（文件过大，Read 只能读到头部，会漏掉后半段资产）
   - 必须用 python/bash 脚本按关键词过滤查询，例如：`python3 -c "import json; data=json.load(open('plans/assets-index.json')); [print(a['name'],a['path']) for a in data['assets'] if 'FX' in a['path']]"`
@@ -71,8 +71,8 @@
 3. **更新功能清单** — 标记已完成的功能项：
    `./plans/feature-checklist.md`
 
-4. **更新视觉清单** — 标记已完成的视觉项（如有）：
-   `./plans/visual-checklist.md`（PRD 不含视觉需求时此步骤跳过）
+4. **更新视觉清单** — 标记已完成的视觉项：
+   `./plans/visual-checklist.md`
 
 5. **更新开发日志** — 追加本 Phase 的记录：
    `./logs/dev-log.md`
@@ -84,8 +84,8 @@
 7. **检查已知 Bug** — 有新发现就追加，已修复就标记 ✅：
    `./plans/known-bugs.md`
 
-8. **读取功能清单** — 确认下一步从哪里开始：
-   读取 `./plans/feature-checklist.md`（以及 `visual-checklist.md` 如有）
+8. **读取功能清单和视觉清单** — 确认下一步从哪里开始：
+   读取 `./plans/feature-checklist.md` 和 `./plans/visual-checklist.md`
    不得依赖记忆，必须读取文件后才能继续。
 
 9. **版本控制检查** — 测试全绿后检查 git 状态：
@@ -116,7 +116,7 @@
 - 每个 Phase 必须测试全绿才能继续下一个
 - 逻辑测试每个循环后立即跑：`🟢 [逻辑测试]`
 - 引擎测试每个 Phase 完成后跑：`🔵 [引擎测试]`
-- **以上两类测试均指测试时机，不影响测试方式：编辑器开着时一律用 MCP run_tests，不得因为是"逻辑测试"就改用 batchmode**（适用于使用游戏引擎的项目；纯 Web/Node 项目用对应测试框架替代）
+- **以上两类测试均指测试时机，不影响测试方式：编辑器开着时一律用 MCP run_tests，不得因为是"逻辑测试"就改用 batchmode**
 - 如果测试框架未安装，自动安装，安装失败才用 TestRunner 替代
 - **新增文件后，必须等待引擎完成资源导入/重新编译，再执行后续操作**
 - **跑测试前，先用引擎 MCP 检查控制台是否有编译错误，有错误必须先修复再执行测试**
@@ -161,7 +161,7 @@
 
 ## 交互测试规则
 
-每个 Phase 完成后，针对本 Phase 新增的所有可交互元素，必须写测试验证交互响应：
+每个 Phase 完成后，针对本 Phase 新增的所有可交互元素，必须写运行时测试验证交互响应：
 - 用代码模拟点击、触发等操作
 - 验证对应的回调、事件、状态变化是否正确触发
 - 测试必须全绿才能停下来等用户确认
@@ -176,6 +176,9 @@
 - ❌ 依赖记忆而不读取文件
 - ❌ 强行结束引擎进程，必须提前告知用户关闭引擎
 
+- Windows bash 环境下强制关闭进程必须用 `cmd.exe //C "taskkill /F /IM 进程名.exe"`，不可直接调用 taskkill（bash 会把 `/F` 等参数当路径解析）
+- 批量测试跑完后必须关闭引擎进程，不得残留
+
 ---
 
 ## 引擎 / 编辑器 MCP 工具使用规则
@@ -188,11 +191,19 @@
 
 **⚠️ MCP 修改场景后必须立即保存（不可跳过）：** 任何通过 MCP 修改场景内容的操作（添加/删除/修改对象、组件属性等）完成后，必须**立即**调用引擎 MCP 的场景保存工具，防止场景处于 dirty 状态，避免后续操作触发引擎保存弹窗导致 MCP 超时。**每次修改后都要执行，不得批量延后。**
 
+**💡 推荐：安装自动存盘脚本（一次性配置，永久生效）**
+接入任何引擎 MCP 后，优先安装对应引擎的自动存盘机制（详见各引擎 DEV_RULES 的"MCP 场景自动存盘"章节）：
+- **Unity** → 创建 `Assets/Scripts/Editor/AutoSaveScene.cs`（监听 hierarchyChanged，2 秒防抖自动保存）
+- **Godot** → 创建 `addons/auto_save/auto_save_plugin.gd` EditorPlugin（监听节点增删，2 秒防抖）
+- **UE5** → 启用内置 AutoSave（Editor Preferences > Auto Save，间隔 30 秒）或部署 Python 插件
+
+安装后在项目 `CLAUDE.md` 中标注已安装，后续 MCP 修改场景无需手动 `save_scene`。
+
 ---
 
-## Roadmap 修改校验规则（From-Scratch）
+## Roadmap 修改校验规则（Migration）
 
-任何时候新增、修改、追加项目计划 roadmap 文件的内容（包括追加新 Phase、调整顺序、修改 Phase 内容），必须先完整读取 `03-prd-plan.md`，逐条对照检查：
+任何时候新增、修改、追加项目计划 roadmap 文件的内容（包括追加新 Phase、调整顺序、修改 Phase 内容），必须先完整读取 `04-plan.md`，逐条对照检查：
 
 - 所有规划规则是否还在被遵守？
 - Phase 顺序和依赖门是否正确？
