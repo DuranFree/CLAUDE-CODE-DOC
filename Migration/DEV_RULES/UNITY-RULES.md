@@ -136,6 +136,46 @@ PlayMode 测试放在 `Assets/Tests/PlayMode/` 目录。
 
 ---
 
+## LayoutGroup 使用判断规则
+
+**用 LayoutGroup 的唯一合理场景：** 子节点只需要静态排列，不需要任何位移/旋转/缩放动画。
+
+| 场景 | 用 LayoutGroup？ |
+|------|----------------|
+| 设置菜单选项行、背包格子、商店列表 | ✅ 适合 |
+| 对话框按钮组（确认/取消） | ✅ 适合 |
+| 技能栏图标（静态排列） | ✅ 适合 |
+| 手牌扇形展开 | ❌ 不适合 |
+| 卡牌进场/离场动画 | ❌ 不适合 |
+| 子节点需要旋转 | ❌ 不适合 |
+| 子节点需要非均匀间距 | ❌ 不适合 |
+| 子节点需要自定义尺寸（如圆形不被拉伸） | ❌ 不适合（`childControlHeight/Width=true` 会强制拉伸） |
+
+**判断口诀：** 子节点只排列不动 → 用 LayoutGroup；子节点要动 → 自己算坐标。
+
+---
+
+## LayoutGroup 与位置动画互斥
+
+Unity 的 LayoutGroup（HorizontalLayoutGroup / VerticalLayoutGroup / GridLayoutGroup）
+在 `Canvas.willRenderCanvases` 阶段强制重算并覆盖所有子节点的 `anchoredPosition`，
+该阶段发生在 `LateUpdate()` **之后**、渲染之前。
+
+- 凡是需要在 `Update` / `LateUpdate` / DOTween 里手动控制 `anchoredPosition` 的节点，
+  不得作为 LayoutGroup 的直接子节点
+
+- 正确做法二选一：
+  ① 移除容器上的 LayoutGroup，自己计算 `anchoredPosition`（TCG Engine 方案）
+  ② 给子节点加 `LayoutElement.ignoreLayout = true` 脱离布局控制，
+     但同时失去自动排列，需自行维护所有位置
+
+- 常见踩坑场景：
+  - 手牌扇形展开、卡牌拖拽、进场动画 → 手牌容器不挂 HorizontalLayoutGroup
+  - 弹窗/提示从屏幕外飞入 → 直接放在 Canvas 根节点下，不放在任何 LayoutGroup 内
+  - 拖拽时需要临时脱离：`SetParent(rootCanvas.transform)` + `LayoutElement.ignoreLayout`
+
+---
+
 ## 常见坑
 
 - `Awake()` 早于 `Start()`，跨组件初始化顺序依赖时要注意 ⚠️ [写入CLAUDE.md]

@@ -203,6 +203,52 @@ void AMyActor::OnFadeUpdate(float Value)
 
 ---
 
+## UMG 布局面板使用判断规则
+
+**用 Box 类面板的唯一合理场景：** 子 Widget 只需要静态排列，不需要任何位移/旋转/缩放动画。
+
+| 场景 | 用 Box 面板？ |
+|------|------------|
+| 设置菜单选项行、背包格子、商店列表 | ✅ 适合（HorizontalBox / VerticalBox） |
+| 对话框按钮组（确认/取消） | ✅ 适合 |
+| 技能栏图标（静态排列） | ✅ 适合 |
+| 手牌扇形展开 | ❌ 不适合，改用 Canvas Panel |
+| Widget 飞入/飞出动画 | ❌ 不适合，改用 Canvas Panel |
+| 子 Widget 需要旋转 | ❌ 不适合，改用 Canvas Panel |
+| 子 Widget 需要非均匀间距 | ❌ 不适合，改用 Canvas Panel |
+| 拖拽 Widget | ❌ 不适合，拖拽时必须移到顶层 Canvas Panel |
+
+**判断口诀：** 子 Widget 只排列不动 → 用 Box 面板；子 Widget 要动 → 用 Canvas Panel 自己控制 Anchors。
+
+**Canvas Panel 是 UMG 里唯一支持自由定位动画的容器**，相当于 Unity 的"无 LayoutGroup 的 RectTransform"。
+
+---
+
+## UMG 布局面板与 Widget 动画互斥
+
+UMG 的布局面板（UHorizontalBox、UVerticalBox、UGridPanel、UUniformGridPanel、UWrapBox 等）
+通过 Slate 的 `ArrangeChildren` 在每次布局 Pass 时强制覆盖子 Widget 的位置和大小，
+与 Widget Animation / UMG Timeline / Tick 里手动设置 `RenderTranslation` 会产生冲突。
+
+- 凡是需要动画控制位置的 Widget，必须放在 `UCanvasPanel` 下（自由定位），
+  不得作为 Box 类面板（Horizontal / Vertical / Grid）的直接子节点
+
+- 正确做法二选一：
+  ① Canvas Panel + Anchors 自由定位，动画用 Widget Animation 或 Tick 设置 `RenderTransform`
+  ② 如果必须在 Box 内，只用 `SetRenderTranslation()` 做纯视觉偏移（不影响 layout 空间），
+     但注意 hit-test 区域仍在原始 layout 位置，点击判定会错位
+
+- RenderTransform vs 真实位置：
+  - `RenderTransform` = 纯视觉偏移，layout 不感知，hit-test 不跟随
+  - `Slot` 里的 `Offset` / `Position` = 真实布局位置，Box 面板会覆盖
+
+- 常见踩坑场景：
+  - 手牌扇形展开 → Canvas Panel 下，不放 HorizontalBox
+  - 卡牌拖拽：拖拽时 `AddToViewport` 放顶层，释放后再 `AddChild` 回原容器
+  - 弹窗飞入：放在覆盖全屏的 Canvas Panel 层，不放在任何 Box 面板内
+
+---
+
 ## 常见坑
 
 - `BeginPlay()` 等价于 Unity 的 `Start()`，`Tick()` 等价于 `Update()` ⚠️ [写入CLAUDE.md]

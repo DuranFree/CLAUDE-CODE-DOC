@@ -257,6 +257,48 @@ func charge_attack(back_pos: Vector2, target_pos: Vector2, origin_pos: Vector2) 
 
 ---
 
+## Container 节点使用判断规则
+
+**用 Container 的唯一合理场景：** 子节点只需要静态排列，不需要任何位移/旋转/缩放动画。
+
+| 场景 | 用 Container？ |
+|------|--------------|
+| 设置菜单选项行、背包格子、商店列表 | ✅ 适合 |
+| 对话框按钮组（确认/取消） | ✅ 适合 |
+| 技能栏图标（静态排列） | ✅ 适合 |
+| 手牌扇形展开 | ❌ 不适合 |
+| 节点进场/离场动画 | ❌ 不适合 |
+| 子节点需要旋转 | ❌ 不适合 |
+| 子节点需要非均匀间距 | ❌ 不适合 |
+| 子节点需要自定义尺寸 | ❌ 不适合（Container 会强制覆盖 `size`） |
+
+**判断口诀：** 子节点只排列不动 → 用 Container；子节点要动 → 用普通 `Control` 自己算坐标。
+
+---
+
+## Container 节点与位置动画互斥
+
+Godot 的 Container 节点（HBoxContainer、VBoxContainer、GridContainer、FlowContainer 等）
+在每帧 `NOTIFICATION_SORT_CHILDREN` 阶段强制重算并覆盖所有子节点的 `position` 和 `size`，
+该通知通过 `queue_sort()` 延迟触发，发生在当前帧 `_process` 结束后。
+
+- 凡是需要在 `_process` / Tween 里手动控制 `position` 的 Control 节点，
+  不得作为 Container 的直接子节点
+
+- 正确做法二选一：
+  ① 改用普通 `Control` 节点作为容器，自己计算 `position`
+  ② 把需要动画的子节点从 Container 下移出，改挂到同级的 `Control` 或 `CanvasLayer`
+
+- `CustomMinimumSize` 不能替代解决方案：
+  设置它只影响 Container 给子节点分配的最小空间，不阻止 Container 覆盖 `position`
+
+- 常见踩坑场景：
+  - 手牌扇形展开、卡牌拖拽 → 容器改用 `Control`，自己算每张牌的坐标
+  - 弹窗飞入效果 → 放在 `CanvasLayer` 下，不放在 `VBoxContainer` 内
+  - 拖拽时需要临时脱离：`reparent(get_tree().root)` 拖拽完再 `reparent` 回原位
+
+---
+
 ## 常见坑
 
 - `_ready()` 里访问其他节点时，确保那个节点已经在场景树里 ⚠️ [写入CLAUDE.md]
