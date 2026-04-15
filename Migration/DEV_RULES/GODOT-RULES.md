@@ -309,28 +309,27 @@ Godot 的 Container 节点（HBoxContainer、VBoxContainer、GridContainer、Flo
 - 信号连接推荐用代码连接而不是编辑器连接，方便追踪 ⚠️ [写入CLAUDE.md]
 - UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
 - 子节点需要位移/旋转/缩放动画时，容器禁止用 Container 节点；静态排列才用 Container ⚠️ [写入CLAUDE.md]
-- 收到任何视觉效果需求（发光/模糊/后处理）前，必须先确认环境配置和节点层级；CanvasLayer 内的节点不受 WorldEnvironment 后处理影响，优先用引擎原生效果 ⚠️ [写入CLAUDE.md]
+- 收到任何视觉效果需求前必须先确认 WorldEnvironment 是否存在、节点是否在 CanvasLayer 内；CanvasLayer 内节点不受 WorldEnvironment 后处理影响 ⚠️ [写入CLAUDE.md]
 
 ---
 
 ## 视觉效果前置检查规则
 > ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Godot 引擎常见坑"
+> 视觉效果实现优先级（引擎原生 → Shader → 手动）见 GODOT-VISUAL-RULES.md
 
-收到任何视觉效果需求（发光 / Glow / 模糊 / 后处理）前，必须先执行：
+收到任何视觉效果需求（发光 / Glow / 模糊 / 后处理）前，必须先确认：
 
-1. **确认 WorldEnvironment 是否存在**：Glow / Bloom / DOF 等全部配置在 `Environment` 资源里
+1. **WorldEnvironment 是否存在**：Glow / DOF 等全部配置在 `Environment` 资源里
    - 没有 WorldEnvironment 节点 → 后处理不生效，需要先添加
 
-2. **确认节点是否在 CanvasLayer 内**：
+2. **节点是否在 CanvasLayer 内**：
    - `CanvasLayer` 创建独立渲染层，其内部节点**不受 WorldEnvironment 后处理影响**
-   - 需要 Glow 的 UI → 不要放在 CanvasLayer 下，改用 SubViewport 或接受 CanvasLayer 限制
+   - 需要 Glow 的 UI → 不要放在 CanvasLayer 下，改用 SubViewport 或接受限制
 
-3. **确认渲染方式**：
+3. **渲染方式**：
    - `Forward+` → 支持完整后处理
-   - `Mobile` → 部分后处理不支持（如 SSR、SSAO）
+   - `Mobile` → 部分后处理不支持（SSR、SSAO）
    - `Compatibility` → 后处理支持最少
-
-4. **优先用引擎原生效果**（`Environment.glow_enabled = true`），手动模拟是最后手段
 
 ---
 
