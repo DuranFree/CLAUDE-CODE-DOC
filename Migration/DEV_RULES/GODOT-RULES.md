@@ -196,53 +196,24 @@ godot --headless -s res://addons/gut/gut_cmdln.gd
 
 ## 动画规范
 
-**补间动画一律使用内置 Tween，禁止手写 _process 插值循环。**
+**动画工具选择原则：有固定终点用 Tween；目标持续变化用 _process Lerp。**
 
-适用范围：所有非骨骼动画，包括但不限于：
+### ✅ 用 Tween 的场景
+从 A 到 B 的一次性动画（起点终点明确、时长固定）：
 - UI 弹窗、淡入淡出、滑动、缩放
 - 数字滚动、进度条填充
-- 卡牌/棋子/道具的移动、旋转、缩放
-- 镜头震屏、跟随、FOV 变化
+- 卡牌出牌、翻转、攻击动画（移动到固定目标位）
+- 镜头震屏、FOV 变化
 - 颜色/alpha 渐变
-- 循环脉冲、呼吸效果
-
-**不适用（继续使用 AnimationPlayer / AnimationTree）：**
-- 2D/3D 骨骼动画（Spine、骨骼 rig）
-- 多状态切换状态机（idle → walk → run → jump）
-- Blend Tree 混合动画
+- 多段序列动画
 
 ```gdscript
-# ❌ 禁止 — 手写 _process 插值
-var _alpha: float = 1.0
-var _fading: bool = false
-
-func _process(delta: float) -> void:
-    if _fading:
-        _alpha -= delta / 0.5
-        modulate.a = _alpha
-        if _alpha <= 0.0:
-            _fading = false
-
-# ✅ 正确 — Tween 一行搞定
+# ✅ 一次性淡出 — Tween
 func fade_out() -> void:
     var tween: Tween = create_tween()
     tween.tween_property(self, "modulate:a", 0.0, 0.5).set_ease(Tween.EASE_OUT)
-```
 
-```gdscript
-# ❌ 禁止 — 手写 move_toward 循环
-func _process(delta: float) -> void:
-    position = position.move_toward(target_pos, 300.0 * delta)
-
-# ✅ 正确 — Tween
-func move_to(target: Vector2) -> void:
-    var tween: Tween = create_tween()
-    tween.tween_property(self, "position", target, 0.3).set_ease(Tween.EASE_OUT)
-```
-
-**多段序列动画：**
-```gdscript
-# 战斗冲锋：后撤 → 冲向目标 → 回弹
+# ✅ 多段序列 — Tween
 func charge_attack(back_pos: Vector2, target_pos: Vector2, origin_pos: Vector2) -> void:
     var tween: Tween = create_tween()
     tween.tween_property(self, "position", back_pos, 0.3).set_ease(Tween.EASE_OUT)
@@ -251,7 +222,31 @@ func charge_attack(back_pos: Vector2, target_pos: Vector2, origin_pos: Vector2) 
     tween.tween_callback(on_combat_end)
 ```
 
-**清理规则：**
+### ❌ 不用 Tween，改用 _process Lerp 的场景
+目标每帧都可能变化，用 Tween 需要每帧 kill + restart，反而更差：
+- **持续追踪目标**：手牌扇形展开（目标坐标随牌数重算）、悬停跟随
+- **拖拽预览**：跟随鼠标位置的平滑插值
+- **弹簧/阻尼效果**：`lerp(current, target, delta * speed)` 模式
+
+```gdscript
+# ✅ 持续追踪 — _process Lerp（目标每帧可能变化）
+func _process(delta: float) -> void:
+    position = position.lerp(_target_pos, delta * speed)
+
+# ❌ 错误 — 用 Tween 追踪动态目标（每帧 kill/restart，性能差）
+func _process(delta: float) -> void:
+    if _tween:
+        _tween.kill()
+    _tween = create_tween()
+    _tween.tween_property(self, "position", _target_pos, 0.1)  # ← 错误
+```
+
+### ❌ 不适用（使用 AnimationPlayer / AnimationTree）
+- 2D/3D 骨骼动画（Spine、骨骼 rig）
+- 多状态切换状态机（idle → walk → run → jump）
+- Blend Tree 混合动画
+
+### 清理规则
 - 创建新 Tween 前，如果之前有正在运行的 Tween 需要先 `kill()`
 - 节点被 `queue_free()` 时，所有通过 `create_tween()` 创建的 Tween 会自动停止，无需手动清理
 

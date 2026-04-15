@@ -128,12 +128,14 @@ CardWidget->SetColorAndOpacity(FLinearColor(0.78f, 0.67f, 0.43f));
 
 ## 动画规范
 
-- 所有 UI 动画必须有缓动，不允许线性动画
+- 离散状态切换动画（进退场/出牌/翻转）必须有缓动，不允许线性
+- 持续追踪型动画（跟随鼠标/手牌扇形/实时血条）不强制缓动，Tick Lerp 反而更自然
 - 卡牌出牌动画时长：0.2-0.4 秒
 - UI 进场动画时长：0.3-0.5 秒
 - 重要事件（胜利、失败）可以用震屏 + 慢动作强调（`SetGlobalTimeDilation`）
 - 动画必须支持打断和重置，不能锁死输入
 - UMG Animation 用 `PlayAnimation` / `StopAnimation` 控制，不要用 `SetVisibility` 直接切换
+- 不要用 Tick 手写固定时长插值循环；持续追踪目标时 Tick Lerp（`FMath::VInterpTo`）是正确选择
 
 ---
 

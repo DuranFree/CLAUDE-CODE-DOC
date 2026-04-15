@@ -128,75 +128,54 @@ UnrealEditor-Cmd.exe <ProjectPath> -ExecCmds="Automation RunTests <TestName>" -n
 
 ## 动画规范
 
-**程序化补间动画一律使用 FTimeline 或 UTimelineComponent，禁止手写 Tick 插值循环。**
+**动画工具选择原则：有固定终点用 Timeline/UMG Animation；目标持续变化用 Tick Lerp。**
 
-适用范围：所有非骨骼动画，包括但不限于：
+### ✅ 用 FTimeline / UMG Animation 的场景
+从 A 到 B 的一次性动画（起点终点明确、时长固定）：
 - UI 弹窗、淡入淡出、滑动、缩放
 - 数字滚动、进度条填充
-- 卡牌/棋子/道具的移动、旋转、缩放
-- 镜头震屏、跟随、FOV 变化
+- 卡牌出牌、翻转、攻击动画（移动到固定目标位）
+- 镜头震屏、FOV 变化
 - 颜色/alpha 渐变
-- 循环脉冲、呼吸效果
 
-**不适用（继续使用 Animation Blueprint / Montage）：**
+```cpp
+// ✅ 一次性淡出 — UTimelineComponent
+void AMyActor::OnFadeUpdate(float Value)
+{
+    MeshComp->SetScalarParameterValueOnMaterials(TEXT("Opacity"), Value);
+}
+// BeginPlay 中绑定 FadeCurve 并 PlayFromStart()
+```
+
+```cpp
+// ✅ 简单位移 — MoveComponentTo（无需完整 Timeline）
+UKismetSystemLibrary::MoveComponentTo(Component, TargetPos, TargetRot,
+    false, false, 0.3f, false, EMoveComponentAction::Move, LatentInfo);
+```
+
+### ❌ 不用 Timeline，改用 Tick Lerp 的场景
+目标每帧都可能变化，Timeline 是固定时长动画，不适合持续追踪：
+- **持续追踪目标**：手牌扇形展开（目标坐标随牌数重算）、悬停跟随
+- **拖拽预览**：跟随鼠标位置的平滑插值
+- **弹簧/阻尼效果**：`FMath::Lerp(Current, Target, DeltaTime * Speed)` 模式
+
+```cpp
+// ✅ 持续追踪 — Tick Lerp（目标每帧可能变化）
+void AMyActor::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    CurrentPos = FMath::VInterpTo(CurrentPos, TargetPos, DeltaTime, Speed);
+    SetActorLocation(CurrentPos);
+}
+```
+
+### ❌ 不适用（使用 Animation Blueprint / Montage）
 - 骨骼动画（Skeleton Mesh）
 - 多状态切换状态机（idle → walk → run → jump）
 - Blend Space 混合动画
 - AnimMontage 攻击/技能动画
 
-**C++ Timeline 用法：**
-```cpp
-// ❌ 禁止 — 手写 Tick 插值
-void AMyActor::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-    Alpha -= DeltaTime / 0.5f;
-    MeshComp->SetScalarParameterValueOnMaterials(TEXT("Opacity"), Alpha);
-}
-
-// ✅ 正确 — UTimelineComponent
-// .h
-UPROPERTY()
-UTimelineComponent* FadeTimeline;
-
-UPROPERTY()
-UCurveFloat* FadeCurve;
-
-UFUNCTION()
-void OnFadeUpdate(float Value);
-
-// .cpp
-void AMyActor::BeginPlay()
-{
-    Super::BeginPlay();
-
-    FOnTimelineFloat UpdateDelegate;
-    UpdateDelegate.BindUFunction(this, FName("OnFadeUpdate"));
-    FadeTimeline->AddInterpFloat(FadeCurve, UpdateDelegate);
-    FadeTimeline->PlayFromStart();
-}
-
-void AMyActor::OnFadeUpdate(float Value)
-{
-    MeshComp->SetScalarParameterValueOnMaterials(TEXT("Opacity"), Value);
-}
-```
-
-**Blueprint 中直接用 Timeline 节点：**
-- 在蓝图 EventGraph 中添加 Timeline 节点
-- 双击编辑曲线，可视化调整 Ease
-- 连接 Update 引脚到 Set 属性节点
-
-**轻量替代方案（简单一次性动画）：**
-```cpp
-// FLatentActionInfo + UKismetSystemLibrary::MoveComponentTo
-// 适合简单的位移/旋转，不需要完整 Timeline
-
-// 或使用第三方插件 BUITween / iTween for UE
-// API 更接近 DOTween 风格，适合大量程序化动画
-```
-
-**清理规则：**
+### 清理规则
 - Timeline 绑定在 Actor 上，Actor 销毁时自动清理
 - 手动停止用 `FadeTimeline->Stop()`
 - `OnDestroy()` 中解绑委托防止悬挂引用
