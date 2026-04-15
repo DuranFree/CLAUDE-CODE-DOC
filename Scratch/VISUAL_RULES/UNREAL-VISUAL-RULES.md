@@ -15,6 +15,22 @@
 
 ---
 
+## 视觉效果实现优先级
+
+> ⚠️ [写入CLAUDE.md] 收到任何视觉效果需求时，必须按此优先级顺序决策
+
+**收到任何视觉效果需求（发光 / Bloom / 模糊 / 描边 / 粒子 / 后处理），按以下顺序决策：**
+
+1. **引擎原生功能** — Post Process Volume（Bloom / Color Grading / Vignette）、Material Editor、Niagara、Lumen
+2. **材质模拟** — 用 Material Editor + Emissive 通道实现发光，仍属于引擎能力范围
+3. **手动代码模拟** — 用 Widget 叠加、Tick 控制颜色模拟效果
+
+**手动模拟是最后手段，只在引擎能力确实无法覆盖时才使用。**
+
+禁止直接跳到手动方案，必须先确认引擎原生能否实现。
+
+---
+
 ## 工具选择规范
 
 ### 什么时候用 Material Editor

@@ -15,6 +15,22 @@
 
 ---
 
+## 视觉效果实现优先级
+
+> ⚠️ [写入CLAUDE.md] 收到任何视觉效果需求时，必须按此优先级顺序决策
+
+**收到任何视觉效果需求（发光 / Glow / 模糊 / 描边 / 粒子 / 后处理），按以下顺序决策：**
+
+1. **引擎原生功能** — WorldEnvironment（Glow / DOF / Vignette）、ShaderMaterial、VisualShader、GPUParticles
+2. **材质/Shader 模拟** — 用 VisualShader 写自定义效果，仍属于引擎能力范围
+3. **手动代码模拟** — 用 TextureRect 叠加、代码控制 modulate 模拟效果
+
+**手动模拟是最后手段，只在引擎能力确实无法覆盖时才使用。**
+
+禁止直接跳到手动方案，必须先确认引擎原生能否实现。
+
+---
+
 ## 工具选择规范
 
 ### 什么时候用 ShaderMaterial / VisualShader
