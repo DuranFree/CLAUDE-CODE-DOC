@@ -42,6 +42,32 @@ UTexture2D* CardTexture;
 
 ---
 
+## TObjectPtr（UE5.0+ 新标准）
+
+**UE5.0 起，`UPROPERTY` 成员变量的原始指针应替换为 `TObjectPtr<T>`。**
+
+```cpp
+// ❌ 旧写法 — 原始指针，UE5 不推荐
+UPROPERTY(EditAnywhere)
+UStaticMeshComponent* MeshComp;
+
+// ✅ 新写法 — TObjectPtr（UE5.0+）
+UPROPERTY(EditAnywhere)
+TObjectPtr<UStaticMeshComponent> MeshComp;
+```
+
+**TObjectPtr 的优势：**
+- 在 Editor 构建中启用 lazy load 和 access tracking，有助于检测悬空引用
+- 与原始指针 API 完全兼容（隐式转换），改动量极小
+- `IsValid()` / `Get()` 等接口与裸指针一致
+
+**规则：**
+- 所有带 `UPROPERTY()` 宏的 UObject/Actor/Component 指针成员变量，一律用 `TObjectPtr<T>`
+- 局部变量、函数参数、TArray 内元素仍可用原始指针（GC 追踪不依赖这些）
+- 非 UPROPERTY 的弱引用用 `TWeakObjectPtr<T>`，软引用用 `TSoftObjectPtr<T>`
+
+---
+
 ## Null 检查
 
 UE5 用 `IsValid()` 检查对象是否有效，不要只用 `!= nullptr`：

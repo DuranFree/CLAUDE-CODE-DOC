@@ -74,23 +74,45 @@ public int health = 100;
 
 ## 协程 vs async/await
 
-Unity 2022+ 支持 async/await，优先使用，但注意生命周期：
+Unity 2022+ 支持 async/await，但 `async void` 在 MonoBehaviour 上有严重生命周期风险：
+
+**⚠️ 禁止在 MonoBehaviour 上用 `async void`**
 
 ```csharp
-// 旧方式
+// ❌ 危险 — async void 无法被外部 await，对象销毁后回调照跑，导致访问已销毁组件崩溃
+async void LoadCard()
+{
+    await Task.Delay(1000);
+    // 如果这 1 秒内 GameObject 被销毁，这里仍然执行，this == null 但代码不知道
+    _image.sprite = loadedSprite;  // ← NullReferenceException
+}
+
+// ✅ 正确 — 用 async Task + CancellationToken，对象销毁时取消
+private CancellationTokenSource _cts;
+
+void OnEnable()  => _cts = new CancellationTokenSource();
+void OnDisable() => _cts?.Cancel();
+void OnDestroy() => _cts?.Dispose();
+
+async UniTask LoadCardAsync(CancellationToken ct)  // 推荐 UniTask，没有则用 Task
+{
+    await UniTask.Delay(1000, cancellationToken: ct);
+    if (ct.IsCancellationRequested) return;
+    _image.sprite = loadedSprite;
+}
+
+// 流程控制（WaitForSeconds/逻辑等待）仍可用协程
 IEnumerator WaitAndDo()
 {
     yield return new WaitForSeconds(1f);
     DoSomething();
 }
-
-// 新方式 (Unity 2022+)
-async void WaitAndDo()
-{
-    await Task.Delay(1000);
-    DoSomething();
-}
 ```
+
+**规则：**
+- `async void` 仅允许在事件处理器（如 `UnityEvent`）中使用，内部必须 try-catch
+- MonoBehaviour 内异步逻辑一律 `async Task` / `async UniTask`，配合 `CancellationToken`
+- 对象销毁前必须取消所有进行中的 Task（`OnDisable` 或 `OnDestroy` 中 `_cts.Cancel()`）
 
 ---
 
@@ -127,6 +149,54 @@ PlayMode 测试放在 `Assets/Tests/PlayMode/` 目录。
 - 使用 `-runTests` 时不加 `-quit`，测试完成后 Unity 会自动退出
 - 正确写法：`-batchmode -runTests -testPlatform EditMode -nographics -projectPath <path>`
 - 错误写法：`-batchmode -runTests -quit -nographics -projectPath <path>`
+
+---
+
+## 对象池（Object Pooling）
+
+**在热路径里禁止用 `Instantiate` / `Destroy`。** 每次创建/销毁都触发 GC 分配、内存碎片化，在战斗中密集生成子弹、伤害数字、特效时，帧率会出现明显抖动。
+
+```csharp
+// ❌ 错误 — 热路径 Instantiate/Destroy，GC 压力大
+void SpawnBullet()
+{
+    var bullet = Instantiate(bulletPrefab, spawnPos, Quaternion.identity);
+    Destroy(bullet, 3f);
+}
+
+// ✅ 正确 — 用 Unity 内置对象池（Unity 2021+）
+using UnityEngine.Pool;
+
+private ObjectPool<GameObject> _pool;
+
+void Awake()
+{
+    _pool = new ObjectPool<GameObject>(
+        createFunc:    () => Instantiate(bulletPrefab),
+        actionOnGet:   obj => obj.SetActive(true),
+        actionOnRelease: obj => obj.SetActive(false),
+        actionOnDestroy: obj => Destroy(obj),
+        defaultCapacity: 20,
+        maxSize: 100
+    );
+}
+
+void SpawnBullet()
+{
+    var bullet = _pool.Get();
+    bullet.transform.SetPositionAndRotation(spawnPos, Quaternion.identity);
+    // 用完后归还
+    StartCoroutine(ReturnAfterDelay(bullet, 3f));
+}
+
+IEnumerator ReturnAfterDelay(GameObject obj, float delay)
+{
+    yield return new WaitForSeconds(delay);
+    _pool.Release(obj);
+}
+```
+
+**需要对象池的典型场景：** 子弹、特效、伤害数字、音效 AudioSource、粒子系统实例。
 
 ---
 

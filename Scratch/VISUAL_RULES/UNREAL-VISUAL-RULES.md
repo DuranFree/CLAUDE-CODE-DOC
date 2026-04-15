@@ -53,22 +53,27 @@
 - **不要用旧版 Cascade 粒子系统做新效果**
 - GPU Simulation 用于大量粒子，CPU Simulation 用于少量需要精确控制的粒子
 
-### 什么时候用 Sequencer / UMG Animations
+### 什么时候用 Sequencer / UMG Animations / Tick Lerp
 - **Sequencer**：过场动画、复杂的多对象协同动画、摄像机运动
-- **UMG Animations**：UI 进场退场、按钮交互动效、数值跳动
-- **Blueprint Timeline**：简单的单属性动画、循环动画
-- **不要用 Tick 事件手写插值动画**
+- **UMG Animations / Blueprint Timeline**：UI 进场退场、按钮交互动效、数值跳动（固定终点）
+- **Tick Lerp（`FMath::VInterpTo`）**：持续追踪动态目标（手牌跟随、悬停跟随、平滑插值）
+- **不要用 Tick 手写固定终点插值动画**；动态追踪目标时 Tick Lerp 是正确选择
 
 ```cpp
-// 正确 — 用 Timeline 或 UMG Animation
+// ✅ 固定终点 — UMG Animation（触发预设动画）
 UFUNCTION()
 void PlayCardAnimation();  // 触发预设的 UMG Animation
 
-// 错误 — Tick 手写插值
+// ✅ 动态追踪目标 — Tick Lerp（目标每帧可能变化）
 void Tick(float DeltaTime) {
-    CardWidget->SetRenderTranslation(
-        FMath::Lerp(CurrentPos, TargetPos, DeltaTime)  // ← bad
-    );
+    CurrentPos = FMath::VInterpTo(CurrentPos, TargetPos, DeltaTime, Speed);
+    CardWidget->SetRenderTranslation(FVector2D(CurrentPos));
+}
+
+// ❌ 错误 — 用 UMG Animation 追踪动态目标（每帧 Stop/Play，性能差）
+void Tick(float DeltaTime) {
+    CardAnimation->Stop();
+    // 无法将动态目标传给 UMG Animation ← 设计上就不合适
 }
 ```
 
@@ -128,6 +133,8 @@ CardWidget->SetColorAndOpacity(FLinearColor(0.78f, 0.67f, 0.43f));
 
 ## 动画规范
 
+**选择原则：有固定终点 → UMG Animation / Blueprint Timeline（必须有缓动曲线）；目标持续变化 → Tick Lerp（`FMath::VInterpTo`）。**
+
 - 离散状态切换动画（进退场/出牌/翻转）必须有缓动，不允许线性
 - 持续追踪型动画（跟随鼠标/手牌扇形/实时血条）不强制缓动，Tick Lerp 反而更自然
 - 卡牌出牌动画时长：0.2-0.4 秒
@@ -135,7 +142,7 @@ CardWidget->SetColorAndOpacity(FLinearColor(0.78f, 0.67f, 0.43f));
 - 重要事件（胜利、失败）可以用震屏 + 慢动作强调（`SetGlobalTimeDilation`）
 - 动画必须支持打断和重置，不能锁死输入
 - UMG Animation 用 `PlayAnimation` / `StopAnimation` 控制，不要用 `SetVisibility` 直接切换
-- 不要用 Tick 手写固定时长插值循环；持续追踪目标时 Tick Lerp（`FMath::VInterpTo`）是正确选择
+- 不要用 Tick 手写固定终点插值动画；持续追踪目标时 Tick Lerp（`FMath::VInterpTo`）是正确选择
 
 ---
 
@@ -177,7 +184,7 @@ CardWidget->SetColorAndOpacity(FLinearColor(0.78f, 0.67f, 0.43f));
 [ ] 确定了明确的视觉风格方向
 [ ] 颜色从统一的常量引用
 [ ] 发光效果用 Material Fresnel 或 Post Process Bloom
-[ ] 动画用 UMG Animation 或 Blueprint Timeline，有缓动
+[ ] 动画用 UMG Animation / Blueprint Timeline（固定终点，有缓动）或 Tick Lerp（动态追踪）
 [ ] 粒子用 Niagara，不用旧版 Cascade
 [ ] Post Process Volume 已配置氛围效果
 [ ] 核心逻辑在 C++，视觉交互在 Blueprint

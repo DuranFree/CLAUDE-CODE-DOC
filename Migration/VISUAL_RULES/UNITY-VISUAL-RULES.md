@@ -106,20 +106,34 @@ GetComponent<Image>().color = new Color(0.78f, 0.67f, 0.43f);
 
 ## 动画规范
 
-- 所有 UI 动画必须有缓动（Ease），不允许线性动画
+**选择原则：有固定终点 → DOTween（必须有缓动）；目标持续变化 → Update/LateUpdate Lerp（线性 Lerp 反而更自然）。**
+
+- 离散状态切换动画（进退场/出牌/翻转）必须有缓动，不允许线性
+- 持续追踪型动画（跟随鼠标/手牌扇形/实时血条）不强制缓动，Lerp 反而更自然
 - 卡牌出牌动画时长：0.2-0.4 秒
 - UI 进场动画时长：0.3-0.5 秒
 - 重要事件（胜利、失败）可以用震屏 + 慢动作强调
 - 动画必须支持打断和重置，不能锁死输入
 
 ```csharp
-// 正确 — 有缓动，支持打断
+// ✅ 有固定终点 — DOTween，有缓动
 transform.DOMove(targetPos, 0.3f)
          .SetEase(Ease.OutBack)
-         .SetId("card_move");
+         .SetTarget(gameObject);
 
-// 错误 — 线性，无缓动
-transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime);
+// ✅ 持续追踪动态目标 — Update Lerp，线性插值自然流畅
+void LateUpdate()
+{
+    _currentPos = Vector2.Lerp(_currentPos, _targetPos, Time.deltaTime * speed);
+    rt.anchoredPosition = _currentPos;
+}
+
+// ❌ 错误 — 用 DOTween 追踪动态目标（每帧 kill/restart，性能差且不稳定）
+void Update()
+{
+    DOTween.Kill(rt);
+    rt.DOAnchorPos(_targetPos, 0.1f); // ← 每帧重启，错误
+}
 ```
 
 ---
@@ -137,7 +151,7 @@ transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime)
 ## 禁止行为
 
 - ❌ 用普通 `UI Image` 模拟发光效果
-- ❌ 用 `Update()` 手写插值动画
+- ❌ 用 `Update()` 手写固定终点插值动画（改用 DOTween）；持续追踪动态目标时 Update Lerp 是正确选择
 - ❌ 颜色硬编码在组件里
 - ❌ 粒子效果数量超过 1000 还用 `Particle System`
 - ❌ UI 切换没有任何过渡动画
@@ -152,7 +166,7 @@ transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime)
 [ ] 确定了明确的视觉风格方向
 [ ] 颜色从统一的常量文件引用
 [ ] 发光效果用 Shader Graph 或 URP Bloom，不用 UI Image
-[ ] 动画用 DOTween，有缓动，支持打断
+[ ] 动画用 DOTween（固定终点，有缓动）或 Update Lerp（动态追踪）
 [ ] 粒子用 VFX Graph（大量）或 Particle System（少量）
 [ ] Post Processing Volume 已配置
 [ ] 有悬停、选中、禁用三种状态的视觉区分

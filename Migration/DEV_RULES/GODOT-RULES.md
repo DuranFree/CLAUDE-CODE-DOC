@@ -194,6 +194,38 @@ godot --headless -s res://addons/gut/gut_cmdln.gd
 
 ---
 
+## _physics_process vs _process
+
+**物理相关操作必须在 `_physics_process` 里，不要放在 `_process` 里。**
+
+| 操作类型 | 正确回调 |
+|---------|---------|
+| 移动 `CharacterBody2D/3D`（`move_and_slide`、`move_and_collide`） | `_physics_process` |
+| 施加力、修改速度（`RigidBody`） | `_physics_process` |
+| 碰撞检测 | `_physics_process` |
+| 读取用户输入（`Input.is_action_pressed`） | `_process`（或 `_input`） |
+| UI 更新、视觉跟随 | `_process` |
+| 动画播放控制 | `_process` |
+
+```gdscript
+# ❌ 错误 — 在 _process 里移动物理体，帧率不稳定时碰撞行为异常
+func _process(delta: float) -> void:
+    velocity += gravity * delta
+    move_and_slide()  # ← 应在 _physics_process
+
+# ✅ 正确 — 物理操作在 _physics_process，UI 更新在 _process
+func _physics_process(delta: float) -> void:
+    velocity += gravity * delta
+    move_and_slide()
+
+func _process(delta: float) -> void:
+    _health_bar.value = health  # UI 更新在 _process
+```
+
+**原因：** `_physics_process` 以固定步长（默认 60Hz）运行，与物理引擎同步。`_process` 与渲染帧率同步，帧率浮动时碰撞检测会出现穿透或卡顿。
+
+---
+
 ## 动画规范
 
 **动画工具选择原则：有固定终点用 Tween；目标持续变化用 _process Lerp。**

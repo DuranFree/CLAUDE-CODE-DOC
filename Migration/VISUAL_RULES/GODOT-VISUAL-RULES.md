@@ -48,10 +48,11 @@
 - **不要用 CPUParticles 做大量粒子**
 
 ### 什么时候用 Tween / AnimationPlayer
-- **Tween**：卡牌移动、翻转、出牌动画、UI 进场退场、数值跳动
+- **Tween**：卡牌移动、翻转、出牌动画、UI 进场退场、数值跳动（固定终点，有缓动）
 - **AnimationPlayer**：复杂的多属性组合动画、角色动画、需要复用的动画序列
-- 所有动画必须有缓动（Tween.EASE_OUT、EASE_IN_OUT 等），不允许线性动画
-- **不要用 `_process()` 手写插值动画**
+- 离散状态切换动画（进退场/出牌/翻转）必须有缓动，不允许线性
+- 持续追踪型动画（跟随鼠标/手牌扇形/实时血条）不强制缓动，`_process` Lerp 反而更自然
+- **不要用 `_process()` 手写固定终点插值动画；动态追踪目标时 `_process` Lerp 是正确选择**
 
 ### 什么时候用 WorldEnvironment
 - 场景氛围必须配置以下效果：
@@ -112,14 +113,21 @@ $Card.modulate = Color(0.78, 0.67, 0.43)
 - 不要用 `_process()` 手写固定时长插值循环；持续追踪目标时 `_process` Lerp 是正确选择
 
 ```gdscript
-# 正确 — 有缓动，链式调用
+# ✅ 固定终点 — Tween，有缓动
 var tween := create_tween()
 tween.set_ease(Tween.EASE_OUT)
 tween.set_trans(Tween.TRANS_BACK)
 tween.tween_property(card, "position", target_pos, 0.3)
 
-# 错误 — 线性，无缓动
-card.position = card.position.lerp(target_pos, delta)
+# ✅ 动态追踪目标 — _process Lerp，线性插值自然流畅
+func _process(delta: float) -> void:
+    position = position.lerp(_target_pos, delta * speed)
+
+# ❌ 错误 — 用 Tween 追踪动态目标（每帧 kill/restart，性能差）
+func _process(delta: float) -> void:
+    if _tween: _tween.kill()
+    _tween = create_tween()
+    _tween.tween_property(self, "position", _target_pos, 0.1)  # ← 错误
 ```
 
 ---
@@ -170,7 +178,7 @@ func play_card() -> void:
 ## 禁止行为
 
 - ❌ 用普通 `TextureRect` 模拟发光效果
-- ❌ 用 `_process()` 手写插值动画
+- ❌ 用 `_process()` 手写固定终点插值动画（改用 Tween）；动态追踪目标时 `_process` Lerp 是正确选择
 - ❌ 颜色硬编码在节点属性里
 - ❌ 粒子效果数量超过 500 还用 `CPUParticles`
 - ❌ UI 切换没有任何过渡动画
@@ -186,7 +194,7 @@ func play_card() -> void:
 [ ] 确定了明确的视觉风格方向
 [ ] 颜色从 GameColors 常量引用
 [ ] 发光效果用 ShaderMaterial 或 WorldEnvironment Glow
-[ ] 动画用 Tween 或 AnimationPlayer，有缓动
+[ ] 动画用 Tween（固定终点，有缓动）或 _process Lerp（动态追踪）
 [ ] 粒子用 GPUParticles（大量）或 CPUParticles（少量）
 [ ] WorldEnvironment 已配置氛围效果
 [ ] 所有 UI 样式通过 Theme 统一管理
