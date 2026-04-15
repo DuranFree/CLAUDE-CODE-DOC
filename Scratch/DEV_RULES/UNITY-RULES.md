@@ -257,62 +257,59 @@ var target = possibleTarget != null ? possibleTarget : defaultTarget;
 
 ## 动画规范
 
-**补间动画一律使用 DOTween，禁止手写协程插值。**
+**动画工具选择原则：有固定终点用 DOTween，目标持续变化用 Update Lerp。**
 
-适用范围：所有非骨骼动画，包括但不限于：
+### ✅ 用 DOTween 的场景
+从 A 到 B 的一次性动画（起点终点明确、时长固定）：
 - UI 弹窗、淡入淡出、滑动、缩放
 - 数字滚动、进度条填充
-- 卡牌/棋子/道具的移动、旋转、缩放
-- 镜头震屏、跟随、FOV 变化
+- 卡牌出牌、翻转、攻击动画（移动到固定目标位）
+- 镜头震屏、FOV 变化
 - 颜色/alpha 渐变
-- 循环脉冲、呼吸效果
-
-**不适用（继续使用 Animator Controller）：**
-- 2D/3D 骨骼动画（Spine、骨骼 rig）
-- 多状态切换状态机（idle → walk → run → jump）
-- Blend Tree 混合动画
+- 多段序列（Sequence）
 
 ```csharp
-// ❌ 禁止 — 手写协程插值
-IEnumerator FadeOut(CanvasGroup cg)
-{
-    float t = 0f;
-    while (t < 1f)
-    {
-        t += Time.deltaTime / 0.5f;
-        cg.alpha = Mathf.Lerp(1f, 0f, t);
-        yield return null;
-    }
-}
-
-// ✅ 正确 — DOTween 一行搞定
+// ✅ 一次性淡出 — DOTween
 cg.DOFade(0f, 0.5f).SetEase(Ease.OutQuad);
-```
 
-```csharp
-// ❌ 禁止 — 手写 MoveTowards 循环
-IEnumerator MoveCard(Transform card, Vector3 target)
-{
-    while (Vector3.Distance(card.position, target) > 0.01f)
-    {
-        card.position = Vector3.MoveTowards(card.position, target, 5f * Time.deltaTime);
-        yield return null;
-    }
-}
-
-// ✅ 正确 — DOTween
-card.DOMove(target, 0.3f).SetEase(Ease.OutQuad);
-```
-
-**多段序列动画用 Sequence：**
-```csharp
-// 战斗冲锋：后撤 → 冲向目标 → 回弹
+// ✅ 多段序列 — DOTween Sequence
 var seq = DOTween.Sequence();
 seq.Append(card.DOMove(backPos, 0.3f).SetEase(Ease.OutQuad));
 seq.Append(card.DOMove(targetPos, 0.1f).SetEase(Ease.InQuad));
 seq.Append(card.DOMove(originPos, 0.3f).SetEase(Ease.OutBack));
 seq.OnComplete(() => OnCombatEnd());
 ```
+
+### ❌ 不用 DOTween，改用 Update/LateUpdate Lerp 的场景
+目标每帧都可能变化，用 DOTween 需要每帧 kill + restart，反而更差：
+- **持续追踪目标**：手牌扇形展开（每次加减牌目标坐标重算）、悬停跟随
+- **拖拽预览**：跟随鼠标位置的平滑插值
+- **弹簧/阻尼效果**：`Lerp(current, target, dt * speed)` 模式
+
+```csharp
+// ✅ 持续追踪 — Update Lerp（目标每帧可能变化）
+void LateUpdate()
+{
+    _currentPos = Vector2.Lerp(_currentPos, _targetPos, Time.deltaTime * speed);
+    rt.anchoredPosition = _currentPos;
+}
+
+// ❌ 错误 — 用 DOTween 追踪动态目标（每帧 kill/restart，性能差且不稳定）
+void Update()
+{
+    DOTween.Kill(rt);
+    rt.DOAnchorPos(_targetPos, 0.1f); // ← 每帧重启 tween，错误
+}
+```
+
+### ❌ 不适用（使用 Animator Controller）
+- 2D/3D 骨骼动画（Spine、骨骼 rig）
+- 多状态切换状态机（idle → walk → run → jump）
+- Blend Tree 混合动画
+
+### DOTween 清理规则
+- 所有 tween 必须加 `.SetTarget(gameObject)` 便于统一清理
+- `OnDestroy` 中调用 `DOTween.Kill(gameObject)`
 
 **安装方式：**
 - Asset Store 免费版：`DOTween (HOTween v2)`

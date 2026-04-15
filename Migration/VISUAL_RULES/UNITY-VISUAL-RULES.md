@@ -48,11 +48,16 @@
 - **不要用 Particle System 做大量粒子**
 
 ### 什么时候用 DOTween
-- 卡牌移动、翻转、出牌动画
-- UI 元素进场/退场
-- 数值跳动（伤害数字、得分）
+- 卡牌出牌、翻转、攻击动画（移动到固定目标位）
+- UI 元素进场/退场、弹窗、淡入淡出
+- 数值跳动（伤害数字、得分）、进度条填充
 - 缓入缓出、弹跳、震屏
-- **不要用 Update() 手写插值动画**
+- 多段序列动画（Sequence）
+
+**不要用 DOTween 的场景（改用 Update/LateUpdate Lerp）：**
+- 目标位置每帧都在变化（手牌扇形、悬停跟随、拖拽预览）
+- `Lerp(current, target, dt * speed)` 持续追踪模式
+- 用 DOTween 做持续追踪 = 每帧 kill + restart，性能差且不稳定
 
 ### 什么时候用 URP Post Processing
 - 场景氛围必须开启以下效果：
