@@ -137,6 +137,7 @@ PlayMode 测试放在 `Assets/Tests/PlayMode/` 目录。
 ---
 
 ## LayoutGroup 使用判断规则
+> ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Unity 引擎常见坑"
 
 **用 LayoutGroup 的唯一合理场景：** 子节点只需要静态排列，不需要任何位移/旋转/缩放动画。
 
@@ -186,6 +187,28 @@ Unity 的 LayoutGroup（HorizontalLayoutGroup / VerticalLayoutGroup / GridLayout
 - `string` 拼接在热路径里用 `StringBuilder` ⚠️ [写入CLAUDE.md]
 - Physics 操作放在 `FixedUpdate()`，输入检测放在 `Update()` ⚠️ [写入CLAUDE.md]
 - UI 元素定位超出父容器边界时（pivot + offset 导致跑出 rect 范围），必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
+- 子节点需要位移/旋转/缩放动画时，容器禁止挂 LayoutGroup；静态排列才用 LayoutGroup ⚠️ [写入CLAUDE.md]
+- 收到任何视觉效果需求（发光/模糊/后处理）前，必须先确认渲染管线（URP/HDRP/Built-in）和 Canvas 渲染模式（Overlay/Camera/World）；Canvas Overlay 模式下 URP 后处理完全无效，优先用引擎原生效果，手动模拟贴图是最后手段 ⚠️ [写入CLAUDE.md]
+
+---
+
+## 视觉效果前置检查规则
+> ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Unity 引擎常见坑"
+
+收到任何视觉效果需求（发光 / Bloom / 模糊 / 描边 / 后处理）前，必须先执行：
+
+1. **确认渲染管线**：URP / HDRP / Built-in
+   - Built-in → 没有 Post Process Stack v2 就没有 Bloom，考虑手动方案
+   - URP / HDRP → 检查 PostProcessVolume 是否存在且 Profile 已配置
+
+2. **确认 Canvas 渲染模式**：
+   - `Screen Space - Overlay` → Canvas 在后处理之后渲染，**URP Bloom 完全碰不到**
+   - `Screen Space - Camera` → Canvas 走相机渲染管线，后处理生效 ✅
+   - `World Space` → 同上，后处理生效 ✅
+
+3. **优先用引擎原生效果**，手动贴图 / 代码模拟是最后手段
+
+**Canvas Overlay + URP Bloom 的修法：** 把 Canvas 的 Render Mode 改为 `Screen Space - Camera`，指定主相机，后处理立即生效。
 
 ---
 

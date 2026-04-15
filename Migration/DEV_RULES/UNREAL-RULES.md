@@ -204,6 +204,7 @@ void AMyActor::OnFadeUpdate(float Value)
 ---
 
 ## UMG 布局面板使用判断规则
+> ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Unreal 引擎常见坑"
 
 **用 Box 类面板的唯一合理场景：** 子 Widget 只需要静态排列，不需要任何位移/旋转/缩放动画。
 
@@ -260,6 +261,30 @@ UMG 的布局面板（UHorizontalBox、UVerticalBox、UGridPanel、UUniformGridP
 - Hot Reload 不稳定，重大改动后完整重编译 ⚠️ [写入CLAUDE.md]
 - 物理操作在 `PhysicsTick` 或用 `FBodyInstance` 直接操作 ⚠️ [写入CLAUDE.md]
 - UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
+- 子 Widget 需要位移/旋转/缩放动画时，容器必须用 Canvas Panel；静态排列才用 Box 面板 ⚠️ [写入CLAUDE.md]
+- 收到任何视觉效果需求（发光/Bloom/后处理）前，必须确认 Widget 渲染模式；Screen Space UMG 不受 Post Process Volume 影响，优先用引擎原生效果 ⚠️ [写入CLAUDE.md]
+
+---
+
+## 视觉效果前置检查规则
+> ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Unreal 引擎常见坑"
+
+收到任何视觉效果需求（发光 / Bloom / 模糊 / 后处理）前，必须先执行：
+
+1. **确认 Post Process Volume 是否存在且覆盖相机**：
+   - 没有 PostProcessVolume 或 `Infinite Extent` 未勾选 → Bloom 等效果不生效
+   - PostProcessVolume 存在但 Blend Weight = 0 → 同样无效
+
+2. **确认 UMG Widget 渲染模式**：
+   - `Screen Space`（默认）→ Widget 在后处理**之后**合成，**Post Process Volume 的 Bloom 碰不到**
+   - `World Space` → Widget 作为场景对象渲染，后处理生效 ✅
+   - 需要 Bloom 的 UI → 改用 World Space Widget，或把 UI 渲染到 Render Target 再后处理
+
+3. **自发光材质触发 Bloom**：
+   - 在材质里提升 Emissive Color 强度（> 1.0）可触发 Bloom，不依赖 Widget 渲染模式
+   - 适合场景内的发光物体，不适合纯 UI
+
+4. **优先用引擎原生效果**（PostProcessVolume Bloom / Lumen），手动模拟是最后手段
 
 ---
 
