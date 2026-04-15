@@ -47,6 +47,13 @@
   - **Film Grain** — 胶片颗粒，增加质感（可选，强度要低）
 - **不要用 Sprite 或 UI Image 叠加模拟这些后处理效果**
 
+> ⚠️ **使用前提——Canvas 渲染模式必须正确：**
+> - `Screen Space - Overlay`：Canvas 在后处理**之后**合成，Bloom 等效果**对 UI 完全无效**
+> - `Screen Space - Camera`：Canvas 走相机管线，后处理生效 ✅（推荐）
+> - `World Space`：同上，后处理生效 ✅
+>
+> 实现任何 UI 发光效果前，先确认 Canvas Render Mode。Overlay 模式下再好的 PostProcessVolume 配置也碰不到 UI。
+
 ### 什么时候用 UI Toolkit vs uGUI
 - **UI Toolkit**：复杂的游戏界面、需要数据绑定的 UI、需要动态生成大量元素
 - **uGUI**：简单的世界空间 UI、需要 3D 效果的卡牌界面

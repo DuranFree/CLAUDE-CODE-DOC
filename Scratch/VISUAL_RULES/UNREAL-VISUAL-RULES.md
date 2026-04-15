@@ -66,6 +66,15 @@ void Tick(float DeltaTime) {
   - **Chromatic Aberration** — 色差，增加镜头感（可选，强度极低）
 - **不要用 Widget 叠加模拟这些后处理效果**
 
+> ⚠️ **使用前提——Screen Space UMG 不受 Post Process Volume 影响：**
+> - `Screen Space` UMG（默认模式）在后处理**之后**合成到屏幕，Bloom 等效果**对 UI 完全无效**
+> - `World Space` Widget：作为场景对象渲染，后处理生效 ✅
+> - 需要 Bloom 的 UI 发光效果，两种方案：
+>   1. 改用 `World Space` Widget Component 放入场景
+>   2. 在材质的 `Emissive Color` 通道输出高于 1.0 的值，触发 Bloom（适合场景内物体）
+>
+> 实现任何 UI 发光效果前，先确认 Widget 的渲染模式。Screen Space 模式下 PostProcessVolume 配置再完整也对 UI 无效。
+
 ### 什么时候用 UMG vs 3D Widget
 - **UMG**：所有 HUD、菜单、卡牌信息显示
 - **3D Widget (Widget Component)**：世界空间里的 UI 元素、悬浮在角色头顶的信息

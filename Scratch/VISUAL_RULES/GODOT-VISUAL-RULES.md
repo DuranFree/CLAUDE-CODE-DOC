@@ -46,6 +46,13 @@
   - **Fog** — 雾效，用于营造氛围（3D 项目，可选）
 - **不要用 CanvasLayer 上的 ColorRect 模拟全屏效果**（除非 WorldEnvironment 无法满足）
 
+> ⚠️ **使用前提——CanvasLayer 内的节点不受 WorldEnvironment 影响：**
+> - `CanvasLayer` 创建独立渲染层，其内部所有节点**绕过 WorldEnvironment 后处理**（包括 Glow）
+> - 需要 Glow 效果的 UI 元素：不要放在 CanvasLayer 下，改挂到主场景的 Control 节点
+> - 如果必须在 CanvasLayer 内实现发光：用 `ShaderMaterial` 在材质层模拟，或用 `BackBufferCopy` 采样后处理结果
+>
+> 实现任何 UI 发光效果前，先确认节点是否在 CanvasLayer 内。
+
 ### 什么时候用 Theme / StyleBox
 - 所有 UI 元素必须通过 Theme 统一管理样式
 - 按钮、面板、标签的颜色、字体、间距都在 Theme 里定义
