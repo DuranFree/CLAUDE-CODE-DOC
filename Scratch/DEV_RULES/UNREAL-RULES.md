@@ -262,17 +262,17 @@ UMG 的布局面板（UHorizontalBox、UVerticalBox、UGridPanel、UUniformGridP
 - `TArray` 是 UE5 的动态数组，不要用 `std::vector` ⚠️ [写入CLAUDE.md]
 - `FString` 是 UE5 的字符串，不要用 `std::string` ⚠️ [写入CLAUDE.md]
 - `UE_LOG` 用于日志输出，不要用 `printf` 或 `std::cout` ⚠️ [写入CLAUDE.md]
-- 编译时间很长，改动要小步提交 ⚠️ [写入CLAUDE.md]
-- Hot Reload 不稳定，重大改动后完整重编译 ⚠️ [写入CLAUDE.md]
+- 编译时间很长，改动要小步提交 ⚠️ [写入memory]
+- Hot Reload 不稳定，重大改动后完整重编译 ⚠️ [写入memory]
 - 物理操作在 `PhysicsTick` 或用 `FBodyInstance` 直接操作 ⚠️ [写入CLAUDE.md]
-- UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
+- UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入memory]
 - 子 Widget 需要位移/旋转/缩放动画时，容器必须用 Canvas Panel；静态排列才用 Box 面板 ⚠️ [写入CLAUDE.md]
-- 收到任何视觉效果需求前必须确认 PostProcessVolume 是否存在且覆盖相机、Widget 渲染模式是否为 Screen Space；Screen Space UMG 不受 Post Process Volume 影响 ⚠️ [写入CLAUDE.md]
+- 收到任何视觉效果需求前必须确认 PostProcessVolume 是否存在且覆盖相机、Widget 渲染模式是否为 Screen Space；Screen Space UMG 不受 Post Process Volume 影响 ⚠️ [写入memory]
 
 ---
 
 ## 视觉效果前置检查规则
-> ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Unreal 引擎常见坑"
+> ⚠️ [写入memory] 首次读取本规则后，必须追加到项目 memory 索引，作为"收到视觉需求时"的触发器
 > 视觉效果实现优先级（引擎原生 → 材质 → 手动）见 UNREAL-VISUAL-RULES.md
 
 收到任何视觉效果需求（发光 / Bloom / 模糊 / 后处理）前，必须先确认：

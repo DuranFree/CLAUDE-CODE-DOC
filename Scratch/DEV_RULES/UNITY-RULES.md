@@ -256,14 +256,14 @@ Unity 的 LayoutGroup（HorizontalLayoutGroup / VerticalLayoutGroup / GridLayout
 - 不要在运行时用 `GameObject.Find()`，提前缓存引用 ⚠️ [写入CLAUDE.md]
 - `string` 拼接在热路径里用 `StringBuilder` ⚠️ [写入CLAUDE.md]
 - Physics 操作放在 `FixedUpdate()`，输入检测放在 `Update()` ⚠️ [写入CLAUDE.md]
-- UI 元素定位超出父容器边界时（pivot + offset 导致跑出 rect 范围），必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
+- UI 元素定位超出父容器边界时（pivot + offset 导致跑出 rect 范围），必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入memory]
 - 子节点需要位移/旋转/缩放动画时，容器禁止挂 LayoutGroup；静态排列才用 LayoutGroup ⚠️ [写入CLAUDE.md]
-- 收到任何视觉效果需求前必须先确认渲染管线（URP/HDRP/Built-in）和 Canvas 渲染模式；Canvas Overlay 下 URP 后处理完全无效，需改为 Screen Space - Camera ⚠️ [写入CLAUDE.md]
+- 收到任何视觉效果需求前必须先确认渲染管线（URP/HDRP/Built-in）和 Canvas 渲染模式；Canvas Overlay 下 URP 后处理完全无效，需改为 Screen Space - Camera ⚠️ [写入memory]
 
 ---
 
 ## 视觉效果前置检查规则
-> ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Unity 引擎常见坑"
+> ⚠️ [写入memory] 首次读取本规则后，必须追加到项目 memory 索引，作为"收到视觉需求时"的触发器
 > 视觉效果实现优先级（引擎原生 → Shader → 手动）见 UNITY-VISUAL-RULES.md
 
 收到任何视觉效果需求（发光 / Bloom / 模糊 / 描边 / 后处理）前，必须先确认：

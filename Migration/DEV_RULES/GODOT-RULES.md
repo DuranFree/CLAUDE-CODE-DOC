@@ -333,15 +333,15 @@ Godot 的 Container 节点（HBoxContainer、VBoxContainer、GridContainer、Flo
 - `@export` 变量在编辑器里设置后，运行时不要再用代码覆盖 ⚠️ [写入CLAUDE.md]
 - `Variant` 类型的警告默认是 warning，但很多项目设置为 error，一律避免使用 ⚠️ [写入CLAUDE.md]
 - `int / int` 在 GDScript 里结果还是 `int`，需要浮点除法用 `float(a) / float(b)` ⚠️ [写入CLAUDE.md]
-- 信号连接推荐用代码连接而不是编辑器连接，方便追踪 ⚠️ [写入CLAUDE.md]
-- UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入CLAUDE.md]
+- 信号连接推荐用代码连接而不是编辑器连接，方便追踪 ⚠️ [写入memory]
+- UI 元素定位超出父容器边界时，必须主动提示用户验证渲染层级是否遮挡 ⚠️ [写入memory]
 - 子节点需要位移/旋转/缩放动画时，容器禁止用 Container 节点；静态排列才用 Container ⚠️ [写入CLAUDE.md]
-- 收到任何视觉效果需求前必须先确认 WorldEnvironment 是否存在、节点是否在 CanvasLayer 内；CanvasLayer 内节点不受 WorldEnvironment 后处理影响 ⚠️ [写入CLAUDE.md]
+- 收到任何视觉效果需求前必须先确认 WorldEnvironment 是否存在、节点是否在 CanvasLayer 内；CanvasLayer 内节点不受 WorldEnvironment 后处理影响 ⚠️ [写入memory]
 
 ---
 
 ## 视觉效果前置检查规则
-> ⚠️ [写入CLAUDE.md] 核心结论需同步到项目 CLAUDE.md 的"Godot 引擎常见坑"
+> ⚠️ [写入memory] 首次读取本规则后，必须追加到项目 memory 索引，作为"收到视觉需求时"的触发器
 > 视觉效果实现优先级（引擎原生 → Shader → 手动）见 GODOT-VISUAL-RULES.md
 
 收到任何视觉效果需求（发光 / Glow / 模糊 / 后处理）前，必须先确认：
